@@ -1,0 +1,176 @@
+/* views-ops.css — view riêng nhóm Vận hành: Trang chủ (.h-) · Điểm danh (.tk-) · Màn quét (.sc-).
+   CẤM hardcode: chỉ dùng var(--token) — ngoại lệ duy nhất là viền/khe 1–3px.
+   Không định nghĩa lại class chung (.card/.chip/.table-wrap/…): mọi ghi đè đều nằm trong
+   phạm vi class riêng có tiền tố .h-/.tk-/.sc- để không rò sang view khác. */
+
+/* =====================================================================
+   TRANG CHỦ — dải chỉ huy + số liệu + việc cần xử lý + ca đang chạy
+   ===================================================================== */
+
+/* nền jade đậm kế thừa sidebar (đổi theo body.dark qua --header-bg) */
+.h-band {
+  flex: 0 0 auto; flex-wrap: wrap;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--card-radius);
+  border: 1px solid var(--header-border);
+  background: var(--header-bg);
+  color: var(--header-text);
+  box-shadow: var(--shadow-sm);
+}
+.h-band__lead { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.h-band .view-topbar-eyebrow { color: var(--side-text-muted); }
+.h-band__clock {
+  font-size: var(--text-7xl); font-weight: var(--weight-bold); line-height: 1;
+  letter-spacing: -.035em; font-variant-numeric: tabular-nums;
+  color: var(--header-text); text-shadow: var(--text-shadow-title);
+}
+.h-band__date { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--side-text); }
+.h-band__facts { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; padding-bottom: var(--space-1); }
+.h-band__facts .pill { background: var(--header-user-bg); border: 1px solid var(--header-border); color: var(--header-text); }
+
+/* cột trái = danh sách việc, cột phải = bảng ca đang chạy (lưới .split--rev dùng chung) */
+.h-main { min-height: 0; }
+.h-card-triage { min-height: 0; }
+.h-triage {
+  flex: 1 1 auto; min-height: 0; overflow: auto; scrollbar-width: thin;
+  display: flex; flex-direction: column; padding: var(--space-1) 0;
+}
+.h-triage__item {
+  display: grid; grid-template-columns: var(--space-7) minmax(0, 1fr) auto;
+  align-items: center; gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--border-soft);
+}
+.h-triage__item:last-child { border-bottom: 0; }
+.h-triage__ico {
+  display: grid; place-items: center; width: var(--space-7); height: var(--space-7);
+  border-radius: var(--radius-full);
+  background: var(--pending-bg); color: var(--accent-text);
+}
+.h-triage__txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.h-triage__txt b { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text); }
+.h-triage__txt small { font-size: var(--text-xs); line-height: 1.45; color: var(--muted); white-space: normal; overflow-wrap: anywhere; }
+.h-triage__act { display: flex; align-items: center; }
+
+.h-cell { min-width: 0; }
+.h-cell .meter { margin-top: 2px; }
+
+/* =====================================================================
+   ĐIỂM DANH — danh sách task
+   ===================================================================== */
+.tk-card { min-height: 0; }
+.tk-act { text-align: center; white-space: nowrap; }
+.tk-card tbody tr.is-done td { color: var(--muted); }
+.tk-card tbody tr.is-done td b { color: var(--input-text-2); }
+
+/* thanh lọc 1 dòng, cuộn ngang thay vì chiếm chiều cao của bảng */
+.tk-filters {
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--paper-alt);
+  overflow-x: auto; scrollbar-width: thin;
+}
+.tk-chips { display: flex; align-items: center; gap: var(--space-2); flex: 0 0 auto; min-width: 0; }
+.tk-filters .flabel { flex: 0 0 auto; padding-top: 0; }
+.tk-filters .chips { flex-wrap: nowrap; }
+.tk-filters .chip { flex: 0 0 auto; }
+
+.tk-pag-next svg { transform: rotate(180deg); }
+
+/* modal tạo task dùng pivot chung .rp* (components.css) */
+.tk-check { flex-direction: row; align-items: center; gap: var(--space-2); }
+/* =====================================================================
+   MÀN QUÉT — 2 cột: trái nhập mã / phải bảng nhân viên
+   ===================================================================== */
+/* cột trái có nhiều panel (nạp danh sách, ngoại lệ) → cuộn trong cột, không dồn cao cho trang */
+.sc-col { overflow: auto; scrollbar-width: thin; padding-right: 2px; }
+.sc-task__body { gap: var(--space-3); }
+.sc-task .defs dd { display: flex; align-items: center; flex-wrap: wrap; gap: 2px; min-width: 0; }
+.sc-col .scan-input-wrap input:disabled { background: var(--surface-muted); color: var(--muted-2); }
+
+.sc-warn {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--net-err-border);
+  background: var(--card-err-bg);
+  color: var(--danger-strong); font-size: var(--text-xs);
+}
+
+/* lượt quét gần nhất khi chưa có dữ liệu */
+.scan-last.sc-idle { background: transparent; border-style: dashed; }
+.sc-idle .scan-last__avatar { background: var(--surface-muted); color: var(--muted-2); }
+.sc-last__txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.sc-last__txt b { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--text); }
+.sc-last__txt small { font-size: var(--text-xs); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sc-last__badge { flex: 0 0 auto; display: inline-flex; align-items: center; }
+
+/* chip lọc trạng thái 1 dòng trong card danh sách */
+.sc-filters {
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--paper-alt);
+  overflow-x: auto; scrollbar-width: thin;
+}
+.sc-filters .chips { flex-wrap: nowrap; }
+.sc-filters .chip { flex: 0 0 auto; }
+.sc-next svg { transform: rotate(180deg); }
+
+/* khối ngoại lệ Dư — chip dẫn đường về dòng tương ứng */
+.sc-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-3) var(--space-4); overflow: auto; }
+.sc-chips .chip { gap: var(--space-2); }
+
+/* =====================================================================
+   RESPONSIVE — desktop giữ 1 màn hình, mobile ≤700px để tài liệu cuộn tự do
+   ===================================================================== */
+@media (min-width: 1440px) {
+  .h-band__clock { font-size: var(--text-8xl); }
+}
+
+/* tablet: cột quét hẹp lại nhưng vẫn giữ 2 cột */
+@media (max-width: 1100px) {
+  .sc-layout.scan-layout { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+}
+
+@media (max-width: 700px) {
+  .h-band { flex-direction: column; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) var(--space-4); }
+  .h-band__clock { font-size: var(--text-6xl); }
+  .h-band__facts { padding-bottom: 0; }
+  .h-triage__item { grid-template-columns: var(--space-7) minmax(0, 1fr); }
+  .h-triage__act { grid-column: 2; justify-self: start; }
+
+  .sc-layout.scan-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; }
+  .sc-col { overflow: visible; padding-right: 0; }
+  .tk-filters, .sc-filters { padding-inline: var(--space-3); }
+}
+
+/* ---- bảng → thẻ: dòng 1 là tên/Mã + badge trạng thái, nút hành động chiếm cả hàng cuối ---- */
+@media (max-width: 991px) {
+  #tkBody td[data-label="Mã task"], #scBody td[data-label="Tên"] {
+    grid-column: 1; grid-row: 1; font-size: var(--text-md); font-weight: var(--weight-semibold);
+  }
+  #tkBody td[data-label="Trạng thái"], #scBody td[data-label="Trạng thái"] {
+    grid-column: 2; grid-row: 1; justify-self: start;
+  }
+  #tkBody td[data-label="Thao tác"], #scBody td[data-label="Thao tác"],
+  .hm-runs td[data-label="Thao tác"] {
+    grid-column: 1 / -1; padding-top: var(--space-1);
+  }
+  .hm-runs td[data-label="Mã task"] { grid-column: 1; grid-row: 1; font-size: var(--text-md); font-weight: var(--weight-semibold); }
+  .hm-runs td[data-label="Trạng thái"] { grid-column: 2; grid-row: 1; justify-self: start; }
+}
+
+
+/* ---- Stat strip Trang chủ (6 số liệu): từ 1260px ép đúng 5 cột để ô thứ 6 trải hết hàng 2,
+   không còn cảnh mồ côi chiếm 1/5 chiều ngang. Dưới 1260px giữ auto-fit (4 cột → 4+2, mobile → 2+2+2).
+   Số cột pin cứng nên thu/ mở sidebar không làm đổi mật độ đã duyệt. ---- */
+@media (min-width: 1260px) {
+  #viewHome .stat-strip { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  #viewHome .stat-strip > :last-child { grid-column: 1 / -1; }
+}
+

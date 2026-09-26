@@ -1,0 +1,161 @@
+/* views-data.css — style riêng 4 view nhóm dữ liệu:
+   Thống kê (.st-) · Dữ liệu chấm công (.dt-) · Cấu hình (.cf-) · Quản trị (.ad-).
+   Mọi class ở đây đều mang prefix của view và chỉ sống trong file này (hợp đồng §3c).
+   Chỉ dùng var(--token); ngoại lệ đúng luật: số 0, đơn vị fr/em, viền 1px. Không có màu mới. */
+
+/* ================= 1 · Thống kê (.st-) ================= */
+
+/* dải số liệu giữ thấp nhất có thể để 2 bảng pivot còn vùng cuộn trong 1 màn hình */
+.st-strip { flex: 0 0 auto; gap: var(--space-2); }
+.st-strip .stat-card { padding: var(--space-2) var(--space-3); gap: var(--space-1); }
+.st-strip .stat-card__value { font-size: var(--text-4xl); }
+.st-strip .stat-card__note { line-height: 1.25; }
+
+/* card lọc luôn hiện đầy đủ (duyệt Batch G) — bảng bên dưới co và cuộn trong .table-wrap */
+.st-filtercard { flex: 0 0 auto; }
+.st-filterfoot { align-items: center; border-top: 1px solid var(--border-soft); padding-top: var(--space-2); }
+.st-chip { padding: var(--space-1) var(--space-2); font-size: var(--text-2xs); }
+
+.st-body, .st-pivots { display: flex; flex-direction: column; gap: var(--space-4); flex: 1 1 auto; min-height: 0; }
+.st-pivots > .st-card { flex: 1 1 0; }
+
+/* segment đổi nguồn cột (Contract Type | Agency); ≥1025px hai bảng team song song */
+@media (min-width: 1025px) {
+  .st-pivots { display: grid; grid-template-columns: 1fr 1fr; }
+  .st-pivots > .st-card { min-width: 0; }
+}
+.st-card .card__foot { flex-wrap: wrap; }
+
+/* bảng có ~20 cột mã ca: bảng theo nội dung, .table-wrap cuộn cả 2 chiều */
+.st-pivot { width: max-content; min-width: 100%; }
+.st-pivot thead th, .st-pivot tbody td { min-width: var(--mx-day); }
+.st-pivot th[scope="row"], .st-pivot td.num, .st-pivot th.num { text-align: center; }
+.st-pivot td { font-variant-numeric: tabular-nums; }
+.st-pivot th[scope="row"] { font-weight: var(--weight-medium); color: var(--text); }
+.st-rowtotal { border-left: 1px solid var(--border); font-weight: var(--weight-semibold); background: var(--paper-alt); }
+/* ô trống gạch '−' mờ, NỀN GIỐNG ô thường (duyệt 2026-09-26: không tô màu xác khác các ô khác) */
+.st-zero { color: var(--muted-2); }
+
+/* chung chỉ định style tfoot td → cột nhãn của hàng Tổng phải tự dính đáy */
+.st-pivot tfoot th {
+  position: sticky; bottom: 0; z-index: var(--z-stick-2);
+  text-align: center; padding: var(--space-2) var(--space-3);
+  background: var(--paper-alt); border-top: 1px solid var(--border);
+  font-weight: var(--weight-semibold); color: var(--text);
+}
+
+/* ================= 2 · Dữ liệu chấm công (.dt-) ================= */
+
+.dt-table { width: max-content; min-width: 100%; }
+.dt-th { white-space: nowrap; }
+.dt-table tbody tr { cursor: pointer; }
+.dt-key { display: inline-block; min-width: var(--mx-id); font-weight: var(--weight-semibold); }
+.dt-name { min-width: var(--grid-min-col); }
+.dt-zero { color: var(--muted-2); }
+/* ô trống hiển thị gạch mờ — phân biệt "không có dữ liệu" với cột quá hẹp */
+.dt-table td.dt-dim::after { content: '—'; color: var(--muted-2); }
+
+.dt-card .card__foot { flex-wrap: wrap; }
+.dt-foot-hint { margin-left: auto; }
+
+.dt-side { flex: 1 1 auto; }
+.dt-side-body { gap: var(--space-3); overflow: auto; min-height: 0; }
+.dt-meta { font-size: var(--text-xs); gap: var(--space-1) var(--space-3); }
+.dt-his { font-size: var(--text-xs); }
+.dt-his th { padding: var(--space-1) var(--space-2); }
+.dt-his td { padding: 0 var(--space-2); }
+.dt-his-day { color: var(--muted-2); }
+.dt-his-time { font-variant-numeric: tabular-nums; color: var(--muted); }
+.dt-his-scroll { flex: 1 1 auto; min-height: 0; }
+
+/* ================= 3 · Cấu hình (.cf-) ================= */
+
+/* một khung cuộn duy nhất cho toàn form — card không vỡ bố cục 1 màn hình */
+.cf-card { flex: 1 1 auto; }
+.cf-body {
+  display: flex; flex-direction: column; gap: var(--space-4);
+  flex: 1 1 auto; min-height: 0; overflow: auto; padding: var(--space-4);
+}
+.cf-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(var(--grid-min-col), 1fr)); gap: var(--space-4); }
+.cf-group textarea { line-height: 1.5; }
+
+/* chưa bật chế độ sửa → điều khiển khoá dạng "chỉ đọc", không dùng opacity (mất tương phản) */
+.cf-body textarea:disabled, .cf-body select:disabled {
+  background: var(--surface-soft); color: var(--muted);
+  border-color: var(--border-soft); box-shadow: none; cursor: default;
+}
+
+.cf-sub {
+  font-size: var(--text-2xs); font-weight: var(--weight-bold);
+  text-transform: uppercase; letter-spacing: .08em; color: var(--muted-2);
+}
+.cf-sub-inline { text-transform: none; letter-spacing: normal; font-weight: var(--weight-medium); color: var(--muted); }
+.cf-rolerow { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+
+/* bảng role nằm trong khung cuộn chung nên bỏ dính header, để nó cuộn cùng khối */
+.cf-rolewrap { flex: 0 0 auto; overflow: visible; }
+.cf-rolewrap thead th { position: static; }
+.cf-roles { width: 100%; }
+.cf-roles tbody td { height: auto; padding: var(--space-1) var(--space-3); white-space: normal; overflow: visible; }
+.cf-email-ro { color: var(--text); word-break: break-all; }
+.cf-email { min-width: var(--grid-min-col); }
+.cf-rolecell { white-space: nowrap; }
+.cf-row-new { background: var(--primary-soft); }
+.cf-none { padding: var(--space-4); text-align: center; color: var(--muted); }
+/* nhãn "giá trị mặc định" dùng bộ amber chờ xử lý — không dùng --accent-bg (độc quyền ca Chiều) */
+.cf-default { background: var(--pending-bg); color: var(--accent-text); border: 1px solid var(--accent-border); }
+.cf-card .card__foot { flex-wrap: wrap; }
+.cf-foot-hint { margin-left: auto; }
+
+/* ================= 4 · Quản trị (.ad-) ================= */
+
+.ad-card { flex: 1 1 auto; }
+.ad-denied { flex: 0 0 auto; }
+.ad-actionsel { width: auto; min-width: var(--grid-min-col); flex: 0 1 auto; }
+.ad-time { color: var(--muted); font-variant-numeric: tabular-nums; }
+.ad-act { text-transform: none; letter-spacing: normal; }
+.ad-detail { color: var(--muted); }
+
+.ad-purge { flex: 0 0 auto; }
+.ad-purgebody { gap: var(--space-3); }
+.ad-preview {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--accent-border); border-radius: var(--radius-xs);
+  background: var(--pending-bg); color: var(--accent-text);
+  font-size: var(--text-sm);
+}
+.ad-preview svg { flex: 0 0 auto; }
+.ad-preview b { font-weight: var(--weight-bold); }
+.ad-preview--idle { background: var(--surface-soft); border-color: var(--border); color: var(--muted); }
+.ad-purgerow { align-items: center; }
+
+/* ================= 5 · Kh phụ: vùng dán tạm cho nút "Sao chép" ================= */
+.st-clipboard, .dt-clipboard, .ad-clipboard {
+  position: fixed; top: 0; left: 0;
+  width: var(--space-1); height: var(--space-1);
+  padding: 0; border: 0; opacity: 0; pointer-events: none;
+}
+
+/* ================= 6 · Mobile ≤700px ================= */
+@media (max-width: 700px) {
+  .st-strip { grid-template-columns: repeat(auto-fit, minmax(var(--grid-min-col), 1fr)); }
+  .st-filtercard, .st-filtercard .stats-filters { flex: 0 0 auto; overflow: visible; }
+  .cf-groups { grid-template-columns: minmax(0, 1fr); }
+  .cf-body, .dt-side-body { overflow: visible; }
+  .dt-side, .dt-his-scroll { flex: 0 0 auto; }
+  .ad-purgerow .btn { flex: 1 1 auto; }
+  /* tài liệu cuộn thay cho khung trong card → bỏ mọi phần dính để không đè app-header */
+  .st-pivot thead th, .st-pivot tfoot th, .dt-table tfoot td { position: static; }
+}
+
+/* ---- StaffData xếp thẻ ≤991px: dòng 1 tên + mã Staff ID (thành phần .table--cards) ---- */
+@media (max-width: 991px) {
+  /* bản desktop khoá .dt-table theo max-content 20 cột — thẻ 2 cột phải nhả khoá đó */
+  .dt-table { width: 100%; min-width: 0; }
+  .dt-table td, .dt-table th { min-width: 0; }
+  .dt-table tfoot td { white-space: normal; }
+  .dt-table tbody td[data-label="Staff Name"] { grid-column: 1; grid-row: 1; font-size: var(--text-md); }
+  .dt-table tbody td[data-label="Staff ID"] { grid-column: 2; grid-row: 1; justify-self: start; }
+}
+

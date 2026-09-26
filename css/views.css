@@ -1,0 +1,24 @@
+/* views.css — bố cục ngang dùng cho ≥2 view. Rule riêng từng view nằm ở
+   css/views-<nhóm>.css, mỗi file do đúng 1 nguồn sở hữu (hợp đồng §3c). */
+
+/* danh sách + bảng chi tiết 2 cột */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) var(--split-side-w); gap: var(--space-4); flex: 1 1 auto; min-height: 0; }
+.split--rev { grid-template-columns: var(--split-side-w) minmax(0, 1fr); }
+.split__side { display: flex; flex-direction: column; gap: var(--space-4); min-height: 0; }
+
+/* lưới card tổng quan */
+.grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-3); flex: 0 0 auto; }
+.grid-cards--tall { align-content: start; }
+
+/* khối 2 cột nội dung card (biểu đồ + bảng nhỏ) */
+.card-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-4); }
+
+/* dòng label/value dạng định nghĩa */
+.defs { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--space-1) var(--space-4); font-size: var(--text-sm); }
+.defs dt { color: var(--muted-2); }
+.defs dd { color: var(--text); word-break: break-word; }
+
+@media (max-width: 1100px) {
+  .split, .split--rev { grid-template-columns: minmax(0, 1fr); }
+  .split__side { flex: 0 0 auto; }
+}

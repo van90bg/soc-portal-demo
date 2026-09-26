@@ -1,0 +1,225 @@
+/* views-people.css — 3 view nhóm Con người: Nhân sự (.inf-) · Xin nghỉ (.lv-) · Giới thiệu (.ab-).
+   Vị trí làm việc (.pos-) đã gộp vào view Điều phối ngày — xem .sd-pos-* ở views-schedule.css.
+   Mọi class ở đây mang prefix của view và chỉ sống trong file này (hợp đồng §3c);
+   .card/.chip/.table-wrap/.pill/.badge/.defs/.day-pill/.leave-day/.pane… dùng nguyên
+   của components.css + views.css, mọi ghi đè đều đi qua class riêng của view.
+   Chỉ dùng var(--token) — ngoại lệ đúng luật: số 0, đơn vị fr/em/%/ch, viền 1px,
+   px làm min track lưới và px breakpoint theo các file cùng nhóm. */
+
+/* =====================================================================
+   1 · NHÂN SỰ — danh bạ (bảng trên desktop, thẻ trên mobile) + cột phải
+   ===================================================================== */
+
+/* host của cả bảng lẫn thẻ: vùng cuộn duy nhất của card trái */
+.inf-list {
+  display: flex; flex-direction: column;
+  flex: 1 1 auto; min-height: 0;
+}
+
+/* 14 cột, không cột nào được phép cắt chữ → bảng rộng theo nội dung, .table-wrap cuộn 2 chiều */
+.inf-tablewrap { display: block; }
+.inf-scroll { display: none; }
+.inf-table { width: max-content; min-width: 100%; }
+.inf-table tbody tr { cursor: pointer; }
+/* 2 cột chữ dài (địa chỉ, thiết bị) khoá rộng để bảng không tràn vô hạn — bản đầy đủ nằm trong title */
+.inf-table td:nth-child(10), .inf-table td:nth-child(12) { width: var(--mx-name); }
+
+/* nút mở hồ sơ trong cột Tên: avatar + tên, không khung nút */
+.inf-open {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  max-width: 100%; min-height: var(--row-h); padding: 0;
+  background: none; border: 0; font: inherit; text-align: left;
+  color: var(--text); cursor: pointer;
+}
+.inf-open__n { min-width: 0; font-weight: var(--weight-semibold); }
+.inf-open:hover .inf-open__n { color: var(--primary-dark); text-decoration: underline; }
+.inf-open.on .inf-open__n { color: var(--primary-dark); }
+
+.inf-link { color: var(--primary); text-decoration: none; }
+.inf-link:hover { color: var(--primary-dark); text-decoration: underline; }
+
+.badge.inf-on { background: var(--card-ok-bg); color: var(--success-dark); }
+.badge.inf-off { background: var(--surface-soft); color: var(--muted); border-color: var(--border); }
+
+/* sinh nhật trong 30 ngày tới — đánh dấu bằng bộ màu "chờ xử lý", không dùng --accent-bg (độc quyền ca Chiều) */
+.pill.inf-sn {
+  margin-left: var(--space-1);
+  background: var(--pending-bg); color: var(--accent-text);
+  box-shadow: inset 0 0 0 1px var(--accent-border);
+}
+.pill.inf-invalid {
+  background: var(--card-err-bg); color: var(--danger-strong);
+  box-shadow: inset 0 0 0 1px var(--net-err-border);
+}
+
+/* thẻ mobile: thu min track của .grid-cards để lưới xếp được trong cột hẹp */
+.inf-cards { grid-template-columns: repeat(auto-fit, minmax(var(--mx-name), 1fr)); }
+.inf-tile { min-width: 0; cursor: pointer; }
+.inf-tile.is-active { border-color: var(--primary); box-shadow: inset 0 0 0 1px var(--primary); }
+
+/* cột phải: chi tiết / biểu mẫu là 2 khung cuộn độc lập, card sinh nhật giữ theo nội dung */
+.inf-detail, .inf-form { flex: 1 1 auto; min-height: 0; overflow: auto; scrollbar-width: thin; }
+.inf-form { gap: var(--space-3); }
+.inf-actions { flex-wrap: wrap; }
+.inf-actions .btn-danger { margin-left: auto; }
+
+.inf-bdays { flex: 0 1 auto; min-height: 0; overflow: auto; gap: var(--space-1); scrollbar-width: thin; }
+.inf-bday {
+  display: flex; align-items: center; gap: var(--space-2);
+  width: 100%; min-height: var(--row-h); padding: 0 var(--space-1);
+  background: none; border: 0; border-radius: var(--radius-xs);
+  font: inherit; font-size: var(--text-sm); color: var(--text); text-align: left; cursor: pointer;
+}
+.inf-bday:hover { background: var(--surface-muted); }
+.inf-bday__n { flex: 1 1 auto; min-width: 0; line-height: 1.3; }
+
+/* =====================================================================
+   2 · (đã chuyển) VỊ TRÍ LÀM VIỆC — dải ngày + bảng phân công + phân bổ vai trò + cảnh báo
+   sang css/views-schedule.css nhóm .sd-pos-* cùng view Điều phối ngày.
+   ===================================================================== */
+
+/* =====================================================================
+   3 · XIN NGHỈ — dải ngày tô theo trạng thái + bộ lọc số liệu + bảng đơn
+   ===================================================================== */
+.lv-strip-wrap {
+  flex: 0 0 auto; min-width: 0;
+  display: flex; flex-direction: column; gap: var(--space-2);
+  padding: var(--space-2) var(--space-4) var(--space-3);
+}
+.lv-strip-wrap .leave-strip {
+  overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin;
+  padding-bottom: var(--space-1);
+}
+/* --mx-day = 44px: ô ngày đủ rộng để chạm bằng ngón trên tablet */
+.lv-strip-wrap .leave-day { flex: 0 0 auto; width: var(--mx-day); min-height: var(--mx-day); }
+.lv-strip-wrap .leave-day small { white-space: nowrap; }
+.lv-legend { row-gap: var(--space-2); }
+
+.lv-dot {
+  flex: 0 0 auto;
+  width: var(--space-3); height: var(--space-3);
+  border-radius: var(--radius-full); background: var(--border);
+}
+/* nhãn trạng thái + chấm chú giải + nền ô ngày đều ghép động (tên = .lv- + pending/approved/denied) */
+.badge.lv-pending { background: var(--pending-bg); color: var(--leave-pending); border-color: var(--accent-border); }
+.badge.lv-approved { background: var(--card-ok-bg); color: var(--leave-approved); }
+.badge.lv-denied { background: var(--card-err-bg); color: var(--leave-denied); }
+.lv-dot.lv-pending { background: var(--leave-pending); }
+.lv-dot.lv-approved { background: var(--leave-approved); }
+.lv-dot.lv-denied { background: var(--leave-denied); }
+/* :where() hạ specificity về 0 để nền ngày được chọn (.on) và viền hôm nay (.today) của components.css thắng */
+.lv-strip-wrap :where(.leave-day.lv-pending) { background: var(--pending-bg); border-color: var(--accent-border); color: var(--accent-text); }
+.lv-strip-wrap :where(.leave-day.lv-approved) { background: var(--card-ok-bg); border-color: var(--card-ok-bg); color: var(--success-dark); }
+.lv-strip-wrap :where(.leave-day.lv-denied) { background: var(--card-err-bg); border-color: var(--net-err-border); color: var(--danger-strong); }
+
+/* stat-card biến thành nút lọc: phải khai font/màu/cursor vì button không kế thừa font của card */
+.lv-stat {
+  font: inherit; text-align: left; color: var(--text); cursor: pointer;
+  padding: var(--space-2) var(--space-3);
+}
+.lv-stat .stat-card__value { font-size: var(--text-4xl); }
+.lv-stat:hover { border-color: var(--muted-2); }
+.lv-stat.on { background: var(--primary-soft); border-color: var(--primary); box-shadow: inset 0 0 0 1px var(--primary); }
+.lv-stat.on .stat-card__label { color: var(--primary-dark); }
+
+.lv-table { font-size: var(--text-sm); }
+/* 2 cột văn bản dài (lý do, ghi chú) vỡ dòng thay vì cắt; các cột còn lại giữ một dòng */
+.lv-table td:nth-child(4), .lv-table td:nth-child(7) { white-space: normal; max-width: var(--mx-name); }
+.lv-table :where(.lv-row--mine) { background: var(--primary-soft); box-shadow: inset 3px 0 0 var(--primary); }
+.lv-dow {
+  margin-left: var(--space-2);
+  font-size: var(--text-3xs); font-weight: var(--weight-medium); color: var(--muted-2);
+  font-variant-numeric: tabular-nums;
+}
+.lv-kind { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.lv-type { line-height: 1.3; }
+.lv-who { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; min-width: 0; }
+.lv-who__n { font-weight: var(--weight-semibold); }
+.lv-ops { font-size: var(--text-2xs); color: var(--muted-2); }
+.lv-actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-1); flex-wrap: wrap; }
+
+/* =====================================================================
+   4 · GIỚI THIỆU — trang tài liệu: mọi card nằm trong một khung cuộn .ab-doc
+   ===================================================================== */
+.ab-doc {
+  display: flex; flex-direction: column; gap: var(--space-4);
+  flex: 1 1 auto; min-height: 0; overflow: auto;
+  padding-bottom: var(--space-2); scrollbar-width: thin;
+}
+/* trần cao bảng ký hiệu (30 mã ca) tính bằng dòng — tài liệu không phình gấp nhiều lần màn hình */
+.ab-legendwrap { flex: 0 1 auto; max-height: calc(var(--row-h) * 10); }
+.ab-statuswrap, .ab-rolewrap { flex: 0 0 auto; }
+.ab-p { font-size: var(--text-sm); line-height: 1.6; max-width: var(--prose-max); }
+/* .ab-p.muted phải thắng về màu nên .ab-p không đặt color */
+.ab-list {
+  display: flex; flex-direction: column; gap: var(--space-2);
+  padding-left: var(--space-5);
+  font-size: var(--text-sm); line-height: 1.6; max-width: var(--prose-max);
+}
+.ab-list li { padding-left: var(--space-1); }
+/* tài liệu thì chữ phải đọc trọn: mọi ô bảng của view này vỡ dòng thay vì cắt */
+.ab-legendtable tbody td, .ab-statustable tbody td, .ab-roletable tbody td {
+  white-space: normal; overflow: visible; height: auto; line-height: 1.5;
+  padding: var(--space-2) var(--space-3);
+}
+.ab-legendtable { font-variant-numeric: tabular-nums; }
+.ab-roletable { table-layout: fixed; }
+.ab-roletable th:nth-child(1), .ab-roletable td:nth-child(1) { width: 12%; }
+.ab-roletable th:nth-child(2), .ab-roletable td:nth-child(2) { width: 30%; }
+.ab-roletable th:nth-child(3), .ab-roletable td:nth-child(3) { width: 32%; }
+.ab-roletable th:nth-child(4), .ab-roletable td:nth-child(4) { width: 26%; }
+.ab-legend { row-gap: var(--space-2); }
+.pill.ab-role { background: var(--primary-bg); color: var(--primary-dark); }
+.ab-keys { gap: var(--space-2) var(--space-4); align-items: start; }
+/* ghi chú "bản dựng sạch" — viền nét đứt để tách khỏi card tài liệu thường */
+.ab-note { border-color: var(--accent-border); border-style: dashed; }
+
+/* =====================================================================
+   RESPONSIVE — mobile ≤700px: tài liệu cuộn thay khung trong card
+   ===================================================================== */
+@media (max-width: 700px) {
+  .inf-list, .inf-detail, .inf-form, .inf-bdays { flex: 0 0 auto; overflow: visible; }
+  .inf-tablewrap { display: none; }
+  .inf-scroll { display: block; padding: var(--space-2); }
+  .inf-cards { grid-template-columns: minmax(0, 1fr); }
+  .inf-open, .inf-bday { min-height: var(--mx-num); }
+
+  .pos-strip-wrap, .lv-strip-wrap { padding: var(--space-2) var(--space-3); }
+  /* cột hẹp 73px không chứa nổi select "không cần cửa" và ô thứ tự → bỏ fixed,
+     bảng rộng theo nội dung rồi cuộn ngang trong .table-wrap (không cắt chữ nào) */
+  .pos-table { table-layout: auto; font-size: var(--text-xs); }
+  /* min-width chứ không phải width: bảng auto chỉ tôn trọng chiều rộng tối thiểu của ô */
+  .pos-table th:nth-child(1), .pos-table td:nth-child(1) { min-width: var(--mx-name-m); }
+  .pos-warns { max-height: none; overflow: visible; }
+  .pos-table select, .pos-order { min-height: var(--mx-num); }
+  /* mobile không còn cuộn dọc trong .table-wrap → header dính vô ích, bỏ sticky */
+  .pos-table thead th { position: static; }
+
+  .lv-stat .stat-card__value { font-size: var(--text-3xl); }
+  .lv-table td:nth-child(4), .lv-table td:nth-child(7) { max-width: none; }
+  .lv-table thead th { position: static; }
+  .lv-actions { justify-content: flex-start; }
+  .lv-actions .btn { min-height: var(--touch-min); }
+
+  .ab-doc { overflow: visible; }
+  .ab-legendwrap { max-height: none; }
+  /* 4 cột chữ trong bảng vai trò: % khoá trên cột 40px làm chữ tràn sang ô bên cạnh → trả về auto */
+  .ab-roletable { table-layout: auto; }
+}
+
+/* =====================================================================
+   [CHUNG] Đề nghị hợp nhất sang components.css / tokens.css — người giữ file
+   đó quyết định, nhóm Con người không tự sửa:
+   - Đã hợp nhất: .meter/.meter__fill (thanh tỉ lệ), .kbd, --prose-max,
+     --touch-min (components.css nâng điều khiển dùng chung lên 44px ở ≤700px).
+   - Còn lại: dải ngày cuộn ngang (.pos-strip · .lv-strip-wrap) trùng 90% với
+     "cal-strip" (nhóm Lịch) và "leave-strip" (components) → gom thành một
+     thành phần chung khi port, vì cả bốn chỗ đã ổn định riêng.
+   ===================================================================== */
+
+/* ---- Nhật ký hoạt động xếp thẻ ≤991px: dòng 1 thời gian + loại thao tác ---- */
+@media (max-width: 991px) {
+  .ad-table tbody td[data-label="Thời gian"] { grid-column: 1; grid-row: 1; font-size: var(--text-md); }
+  .ad-table tbody td[data-label="Hành động"] { grid-column: 2; grid-row: 1; justify-self: start; }
+}
+

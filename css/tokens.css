@@ -1,0 +1,270 @@
+/* tokens.css — thiết kế kế thừa SPX SOC Portal (clean-room socPortal_3, chưa port về prod)
+   CẤM hardcode màu/spacing/type/radius ngoài file này — mọi rule khác phải var(--token).
+   Nguồn ánh xạ: docs/plans/2026-09-25-enterprise-ops-redesign.md §3.1 / §3.1b / §3.2 / §3.3.
+   P1-9 đã chốt theo phương án "độc quyền amber nhạt cho ca Chiều": --card-extra-bg → --pending-bg. */
+:root {
+  color-scheme: light;
+    /* Design tokens — 189 token: 169 kế thừa từ styles.html :root (đổi GIÁ TRỊ theo plan §3.1/§3.1b/§3.2) + 20 mới (§3.3) */
+    --primary: #2b5d46;
+    --primary-dark: #21482f;
+    --danger: #b3402f;
+    --warning: #a5661c;
+    --success: #3f7d52;
+    --bg: #f7f6f0;
+    --card: #fbfaf6;
+    --card-radius: var(--radius-md);
+    --card-ok-bg: #e9f0eb;
+    --card-err-bg: #fce8e6;
+    --header-h: 59px;
+    --border: #d9d8ce;
+    --text: #21362f;
+    --muted: #59665d;
+    --header-bg: #172623;
+    --header-text: #f4f2e9;
+    --header-border: #2b3b34;
+    --header-user-bg: rgba(255, 255, 255, .07);
+    --surface-muted: #eeeee7;
+    --focus-ring: rgba(43, 93, 70, .45);
+    --shadow-sm: 0 1px 4px rgba(23, 38, 35, .07);
+    --shadow-md: 0 2px 10px rgba(23, 38, 35, .10);
+    --shadow-xs: 0 1px 2px rgba(0,0,0,.05);
+    --shadow-subtle: 0 2px 8px rgba(0,0,0,.08);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,.14);
+    --shadow-overlay: 0 16px 48px rgba(0,0,0,.16), 0 2px 8px rgba(0,0,0,.08);
+    --shadow-pop: 0 6px 24px rgba(0,0,0,.16);
+    --shadow-drawer: 4px 0 16px rgba(0,0,0,.25);
+    --mnav-w: 184px;              /* menu 12 tháng 4 cột */
+    --rs-dialog-w: 860px;         /* modal nạp danh sách — bảng pivot 4 cột số cần hơn .about-dialog */
+    --rs-wrap-h: 52vh;            /* phần bảng pivot cuộn riêng, đầu lọc và nút Nạp luôn thấy */
+    --text-shadow-title: 0 1px 2px rgba(0,0,0,.35);
+    --scrim: rgba(0,0,0,.4);
+    --spinner-track: rgba(43, 93, 70, .25);
+    --dk-bg: #16181d;
+    --dk-card: #1e2126;
+    --dk-muted-bg: #262b33;
+    --dk-soft: #2a2f37;
+    --dk-surface: #242a33;
+    --dk-border: #3a3f47;
+    --dk-text: #e6e9ee;
+    --dk-muted: #9aa0a6;
+    --dk-input: #d5dae1;
+    --dk-extra-hover: #3a3223;
+    --dk-primary: #8ab4f8;
+    --dk-primary-text: #aecbfa;
+    --dk-primary-bg: #2a3a55;
+    --dk-ok: #1d3325;
+    --dk-err: #3d2222;
+    --dk-warn: #3a3018;
+    --dk-green: #81c995;
+    --dk-red: #f28b82;
+    --dk-amber: #fdd663;
+    --dk-amber-deep: #f9ab00;
+    --dk-hover: #2e343d;
+    --dk-header-bg: #0d111a;
+    --dk-header-text: #f4f7fb;
+    --dk-header-border: #3a4a66;
+    --dk-header-user-bg: rgba(255, 255, 255, .08);
+    --dk-side-text: #c3cddb;
+    --dk-side-text-muted: #b6c2d4;
+    --row-hover: #f4f6f1;
+    --primary-bg: #e9f0eb;
+    --surface-soft: #eeeee7;
+    --side-text: #bdc9bf;
+    --side-text-muted: #9cad9e;
+    --success-dark: #2f6a41;
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-7: 28px;
+    --space-8: 32px;
+    --radius-2xs: 4px;
+    --radius-xs: 6px;
+    --radius-sm: 8px;
+    --radius-md: 10px;
+    --radius-lg: 20px;
+    --radius-full: 999px;
+    --text-3xs: 10px;
+    --text-2xs: 11px;
+    --text-xs: 12px;
+    --text-sm: 13px;
+    --text-base: 14px;
+    --text-md: 15px;
+    --text-lg: 16px;
+    --text-xl: 18px;
+    --text-2xl: 20px;
+    --text-3xl: 22px;
+    --text-4xl: 28px;
+    --text-5xl: 32px;
+    --text-6xl: 34px;
+    --text-7xl: 44px;
+    --text-8xl: 72px;
+    --weight-medium: 500;
+    --weight-semibold: 600;
+    --weight-bold: 700;
+    --weight-extrabold: 800;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --danger-strong: #98301f;
+    --primary-soft: #eef4ef;
+    --toast-bg: #202124;
+    --gray-soft: #eceadf;
+    --gray-hover-th: #e4e2d5;
+    --skeleton-a: #f0efe8;
+    --skeleton-b: #e6e5dc;
+    --input-text: #21362f;
+    --input-text-2: #3f544a;
+    --muted-2: #62695e;
+    --row-extra-hover: #faf0d9;
+    --net-err: #d9534f;
+    --net-err-border: #fecaca;
+    --evening-bg: #eaf0f5;
+    --evening-text: #213648;
+    --shift-leave-bg: #fecaca;
+    --gradient-off: #fecaca;
+    --gradient-holiday: #bfdbfe;
+    --shift-am-bg: #e8f1ec;
+    --shift-am-text: #20402f;
+    --shift-pm-bg: #f8f0dc;
+    --shift-holiday-text: #1e3a8a;
+    --shift-holiday-border: #93c5fd;
+    --shift-leave-text: #991b1b;
+    --leave-pending: #b45309;
+    --leave-approved: #166534;
+    --leave-denied: #b91c1c;
+    --mx-num: 44px;
+    --mx-id: 80px;
+    --mx-name: 190px;
+    --mx-role: 60px;
+    --mx-day: 44px;
+    --mx-name-m: 130px;
+    /* chiều rộng ô lưới tối thiểu cho bảng thường (không phải lưới lịch) */
+    --grid-min-col: 190px;
+    /* điều khiển dùng chung */
+    --touch-min: 44px;             /* sàn chạm WCAG 2.2 cho mobile */
+    --prose-max: 72ch;             /* bề rộng tối đa của đoạn văn */
+    --meter-h: 8px;                /* cao mặc định của thanh tỉ lệ */
+    --drawer-w: 280px;             /* rộng sidebar khi thành drawer trên mobile */
+    --split-side-w: 380px;         /* cột phụ của bố cục .split (danh sách/chi tiết) */
+    --pick-w: 540px;               /* khung chọn người trong ma trận Lịch */
+
+    /* số đo layout riêng nhóm Lịch — khai ở đây, file view chỉ tiêu thụ */
+    --sch-name-w: var(--mx-name);  /* cột Họ tên: biến trung gian để thu gọn trên mobile mà không đổi --mx-name gốc */
+    --sch-col-st: 124px;           /* cột Station · Team — ma trận gốc không có cột tổ hợp này */
+    --sp-day-size: 44px;           /* cao tối thiểu ô lịch mini — đủ cho số ngày + badge ca xếp chồng */
+    --sp-list-h: 260px;            /* cao tối đa danh sách combobox chọn người */
+    --cal-card-min: 400px;         /* rộng tối thiểu một khối ca trong lưới kết quả Lịch ngày */
+    --cal-row-h: 380px;            /* cao mỗi hàng khối ca — bảng trong cuộn riêng, giữ layout 1 màn hình */
+    --cal-pill-w: 46px;            /* rộng ô ngày trên dải cuộn Lịch ngày */
+    --cal-pill-h: 56px;            /* cao ô ngày — 3 hàng: thứ / ngày / số người đi làm */
+    --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --duration-fast: 150ms;
+    --duration-normal: 200ms;
+    --duration-slow: 300ms;
+    --z-stick-2: 2;
+    --z-stick-3: 3;
+    --z-stick-4: 4;
+    --z-stick-8: 8;
+    --z-stick-10: 10;
+    --z-topbar: 30;
+    --z-menu: 40;
+    --z-scrim: 55;
+    --z-drawer: 60;
+    --z-modal: 9998;
+    --z-spin: 9999;
+    --z-top: 10000;
+    --accent: #e6ac4d;  /* fill nav active, CTA chính, chỉ báo */
+    --accent-strong: #f3ba57;  /* hover fill */
+    --accent-ink: #20231f;  /* chữ trên --accent (7.85:1) */
+    --accent-bg: #f8f0dc;  /* nền ca Chiều — độc quyền, không dùng cho trạng thái */
+    --accent-border: #dfc387;  /* viền chip amber */
+    --accent-text: #805f23;  /* chữ trên --accent-bg (5.17:1) */
+    --pending-bg: #fdf3e3;  /* nền Dư / đơn chờ duyệt — tách khỏi nền ca Chiều */
+    --side-active-bg: #30443d;  /* nav item active */
+    --side-active-text: #fff9e9;  /* chữ nav active (9.89:1) */
+    --side-mark-bg: #25413a;  /* ô mark SPX */
+    --side-mark-border: rgba(145, 181, 165, .35);  /* viền ô mark */
+    --side-mark-text: #d7e8dd;  /* chữ SPX */
+    --side-card-bg: #20352e;  /* card Kết nối hệ thống */
+    --side-card-border: #43574d;  /* viền card đó */
+    --side-avatar-bg: #c28b47;  /* avatar chữ cái đầu */
+    --paper-alt: #f5f4ed;  /* dải footer trong card */
+    --border-soft: #efeee8;  /* khe ô ma trận */
+    --gutter-max: 1680px;  /* max-width main */
+    /* Layout shell — Phase 1 clean-room, chưa tính vào 189 token ánh xạ về prod */
+    --side-w: 264px;
+    --side-w-min: 60px;
+    --row-h: 34px;
+
+    --shift-off-text: #7f1d1d;  /* chữ badge OFF — tách khỏi --shift-am-text */
+}
+
+body.dark {
+    color-scheme: dark;
+    /* Dark mode — override cùng token, giữ nguyên cơ chế body.dark của prod */
+    --bg: var(--dk-bg);
+    --card: var(--dk-card);
+    --surface-muted: var(--dk-muted-bg);
+    --surface-soft: var(--dk-soft);
+    --border: var(--dk-border);
+    --text: var(--dk-text);
+    --muted: var(--dk-muted);
+    --muted-2: var(--dk-muted);
+    --input-text: var(--dk-text);
+    --input-text-2: var(--dk-input);
+    --row-hover: var(--dk-surface);
+    --row-extra-hover: var(--dk-extra-hover);
+    --primary: var(--dk-primary);
+    --primary-dark: var(--dk-primary-text);
+    --primary-bg: var(--dk-primary-bg);
+    --primary-soft: var(--dk-primary-bg);
+    --focus-ring: rgba(138, 180, 248, .5);
+    --gray-soft: var(--dk-soft);
+    --gray-hover-th: var(--dk-hover);
+    --skeleton-a: var(--dk-muted-bg);
+    --skeleton-b: var(--dk-hover);
+    --card-ok-bg: var(--dk-ok);
+    --card-err-bg: var(--dk-err);
+    --success-dark: var(--dk-green);
+    --danger-strong: var(--dk-red);
+    --shift-am-text: var(--dk-amber);
+    --shift-holiday-text: var(--dk-primary-text);
+    --shift-leave-text: var(--dk-red);
+    --leave-pending: var(--dk-amber);
+    --leave-approved: var(--dk-green);
+    --leave-denied: var(--dk-red);
+    --shift-am-bg: var(--dk-warn);
+    --shift-leave-bg: var(--dk-err);
+    --shift-pm-bg: var(--dk-primary-bg);
+    --gradient-off: var(--dk-err);
+    --gradient-holiday: var(--dk-primary-bg);
+    --header-bg: var(--dk-header-bg);
+    --header-text: var(--dk-header-text);
+    --header-border: var(--dk-header-border);
+    --header-user-bg: var(--dk-header-user-bg);
+    --side-text: var(--dk-side-text);
+    --side-text-muted: var(--dk-side-text-muted);
+    --accent: var(--dk-amber-deep);
+    --accent-strong: var(--dk-amber);
+    --accent-ink: var(--dk-bg);
+    --accent-bg: var(--dk-warn);
+    --accent-border: #5c4a22;
+    --accent-text: var(--dk-amber);
+    --pending-bg: var(--dk-warn);
+    --side-active-bg: var(--dk-primary-bg);
+    --side-active-text: var(--dk-text);
+    --side-mark-bg: var(--dk-muted-bg);
+    --side-mark-border: var(--dk-border);
+    --side-mark-text: var(--dk-side-text);
+    --side-card-bg: var(--dk-card);
+    --side-card-border: var(--dk-border);
+    --side-avatar-bg: var(--dk-amber-deep);
+    --paper-alt: var(--dk-muted-bg);
+    --border-soft: var(--dk-border);
+    --evening-bg: var(--dk-primary-bg);
+    --evening-text: var(--dk-primary-text);
+    --shift-off-text: var(--dk-red);
+}

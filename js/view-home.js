@@ -1,0 +1,300 @@
+/* view-home.js — Trang chủ = bảng chỉ huy ca hôm nay: số liệu → việc cần xử lý → ca đang chạy.
+   Mọi con số tính từ API thật (getTaskListApi / getLeaveRequestsApi / getScheduleMonthApi),
+   không có số tượng trưng. */
+(function () {
+  'use strict';
+
+  var HM = { tasks: null, leave: null, sched: null, gen: null, loading: false };
+  var TTL_MS = 30000;
+  var tsCache = 0;
+
+  /* Danh sách đổi gen sau mỗi mutation ở view khác — cache coi như hết hạn. */
+  function hmFresh() {
+    return !!HM.tasks && SOC.dataGen() === HM.gen && (Date.now() - tsCache) < TTL_MS;
+  }
+
+  /* Ca của task có thể mang nhiều mã ('S1, S3') hoặc giá trị phi ca ('Tự do'). */
+
+  function hmToday() { return SOC.isoDay(new Date()); }
+
+  function hmIsWorking(task) { return task.status !== 'done'; }
+
+  /* ---------- số liệu ---------- */
+  function hmStats() {
+    var refDay = hmToday();
+    var tasks = HM.tasks || [];
+    var out = {
+      refDay: refDay, open: 0, scanned: 0, pending: 0, extra: 0,
+      leavePending: 0, onShift: 0, onLeave: 0, running: []
+    };
+    tasks.forEach(function (t) {
+      if (hmIsWorking(t)) { out.open++; out.running.push(t); }
+      if (String(t.date || '').slice(0, 10) !== refDay) return;
+      var total = Number(t.total) || 0, sc = Number(t.scanned) || 0, ex = Number(t.extra) || 0;
+      out.scanned += sc;
+      out.extra += ex;
+      out.pending += Math.max(0, total - sc - ex);
+    });
+    if (HM.leave && HM.leave.ok) out.leavePending = Number(HM.leave.pendingCount) || 0;
+    if (HM.sched && HM.sched.ok) {
+      var sch = HM.sched.schedule || {};
+      Object.keys(sch).forEach(function (id) {
+        var code = String(sch[id][refDay] || '');
+        if (!code) return;
+        var cat = SOC.shiftCategory(code);
+        if (cat === 'morning' || cat === 'afternoon' || cat === 'evening') out.onShift++;
+        else if (cat === 'leave' || cat === 'holiday') out.onLeave++;
+      });
+    }
+    out.running.sort(function (a, b) { return String(b.taskId).localeCompare(String(a.taskId)); });
+    return out;
+  }
+
+  /* ---------- việc cần xử lý ---------- */
+  function hmTriage(s) {
+    var items = [];
+    (HM.tasks || []).forEach(function (t) {
+      if (t.status !== 'open') return;
+      var total = Number(t.total) || 0;
+      items.push({
+        rank: total ? 2 : 1,
+        icon: total ? 'scan' : 'inbox',
+        title: 'Task ' + t.taskId + ' đang Mở' + (total ? ' nhưng chưa bàn giao' : ' và chưa có danh sách'),
+        note: (total ? 'NV quét sau bước bàn giao mới ghi giờ điểm danh — ' : 'Nạp danh sách theo Station/Ca rồi mới quét — ')
+          + SOC.esc(t.station || 'chưa rõ station') + ' · ' + SOC.slotCell(t.slotCode),
+        act: 'scan', id: t.taskId
+      });
+    });
+    (HM.tasks || []).forEach(function (t) {
+      if (t.status !== 'attend') return;
+      var total = Number(t.total) || 0, sc = Number(t.scanned) || 0;
+      items.push({
+        rank: 3, icon: 'alert',
+        title: 'Task ' + t.taskId + ' đang điểm danh, chưa đóng',
+        note: 'Đã điểm danh ' + sc + '/' + total + ' · ' + SOC.esc(t.station || '') + ' · ' + SOC.slotCell(t.slotCode),
+        act: 'scan', id: t.taskId
+      });
+    });
+    if (HM.leave && HM.leave.ok && s.leavePending) {
+      var first = (HM.leave.rows || []).filter(function (r) { return r.status === 'pending'; })
+        .sort(function (a, b) { return String(a.dateString).localeCompare(String(b.dateString)); });
+      var d = first[0];
+      items.push({
+        rank: 4, icon: 'leave',
+        title: s.leavePending + ' đơn nghỉ chờ duyệt' + (d ? ' — sớm nhất ngày ' + SOC.fmtDate(d.dateString) : ''),
+        note: 'Vào trang Xin nghỉ để duyệt hoặc từ chối.',
+        act: 'goto', id: 'leave'
+      });
+    }
+    items.sort(function (a, b) { return a.rank - b.rank || String(b.id).localeCompare(String(a.id)); });
+    return items.slice(0, 6);
+  }
+
+  /* ---------- fetch ---------- */
+  function hmOnError(r) {
+    if (r && r.message) SOC.toast(r.message, 'err');
+  }
+
+  function hmLoad(silent) {
+    if (HM.loading) return;
+    HM.loading = true;
+    var jobs = [SOC.api.getTaskListApi().then(function (rows) {
+      if (rows && rows.ok === false) { if (!silent) hmOnError(rows); HM.tasks = HM.tasks || []; return; }
+      HM.tasks = Array.prototype.slice.call(rows || []);
+    })];
+    if (SOC.atLeast('operator')) {
+      jobs.push(SOC.api.getLeaveRequestsApi({ month: SOC.isoMonth(new Date()) }).then(function (r) {
+        if (!r || !r.ok) { if (!silent && r) hmOnError(r); HM.leave = null; return; }
+        HM.leave = r;
+      }));
+    } else { HM.leave = null; }
+    if (SOC.state.canViewSchedule !== false) {
+      jobs.push(SOC.api.getScheduleMonthApi(SOC.isoMonth(new Date())).then(function (r) {
+        if (!r || !r.ok) { if (!silent && r) hmOnError(r); HM.sched = null; return; }
+        HM.sched = r;
+      }));
+    } else { HM.sched = null; }
+
+    Promise.all(jobs).then(function () {
+      HM.loading = false;
+      HM.gen = SOC.dataGen();
+      tsCache = Date.now();
+      if (SOC.state.page === 'home') hmPaint();
+    }, function (e) {
+      HM.loading = false;
+      if (!silent) SOC.toast('Không tải được số liệu trang chủ: ' + e.message, 'err');
+      if (SOC.state.page === 'home') hmPaint();
+    });
+  }
+
+  /* ---------- render ---------- */
+  function hmSkRows(n, cells) {
+    var out = [];
+    for (var i = 0; i < n; i++) {
+      var c = [];
+      for (var k = 0; k < cells; k++) c.push('<div class="skeleton-cell"></div>');
+      out.push('<div class="skeleton-row">' + c.join('') + '</div>');
+    }
+    return out.join('');
+  }
+
+  function hmSkeleton() {
+    return '<div class="h-band"><div class="h-band__lead">' +
+      '<span class="view-topbar-eyebrow">Ca hôm nay</span>' +
+      '<div class="h-band__clock" id="homeClock" role="timer" aria-live="off">--:--:--</div>' +
+      '<div class="h-band__date" id="homeDate"></div></div></div>' +
+      '<div class="skeleton-wrap" aria-busy="true" aria-label="Đang tải số liệu ca">' +
+      hmSkRows(3, 6) + '</div>';
+  }
+
+  function hmStatCard(label, value, note, tone) {
+    return '<div class="stat-card' + (tone ? ' stat-card--' + tone : '') + '">' +
+      '<span class="stat-card__label">' + SOC.esc(label) + '</span>' +
+      '<span class="stat-card__value">' + value + '</span>' +
+      '<span class="stat-card__note">' + note + '</span></div>';
+  }
+
+  function hmBand(s) {
+    return '<div class="h-band">' +
+      '<div class="h-band__lead">' +
+      '<span class="view-topbar-eyebrow">Nhịp thời gian</span>' +
+      '<div class="h-band__clock" id="homeClock" role="timer" aria-live="off">--:--:--</div>' +
+      '<div class="h-band__date" id="homeDate"></div>' +
+      '</div>' +
+      '<div class="h-band__facts">' +
+      '<span class="pill">' + SOC.esc(SOC.fmtDate(s.refDay)) + '</span>' +
+      '<span class="pill">' + s.running.length + ' ca đang chạy</span>' +
+      '</div></div>';
+  }
+
+  function hmStrip(s) {
+    var cards = [
+      hmStatCard('Task đang mở', s.open,
+        'Chưa bấm Đóng task trong danh sách 30 ngày gần nhất', s.open ? 'warn' : 'ok'),
+      hmStatCard('Đã điểm danh hôm nay', s.scanned,
+        'Tổng lượt có giờ điểm danh của mọi task ghi ngày ' + SOC.fmtDate(s.refDay), 'ok'),
+      hmStatCard('Chưa điểm danh hôm nay', s.pending,
+        'Tổng NV trong danh sách nhưng chưa có giờ điểm danh', s.pending ? 'warn' : null),
+      hmStatCard('Dư hôm nay', s.extra,
+        'NV quét ngoài danh sách được nạp — cần rà lại trước khi đóng ca', s.extra ? 'warn' : null),
+      hmStatCard('Đơn nghỉ chờ duyệt', s.leavePending,
+        SOC.atLeast('operator') ? 'Trạng thái pending trong tháng này' : 'Cần quyền operator để đọc đơn nghỉ',
+        s.leavePending ? 'warn' : null),
+      hmStatCard('Người có lịch hôm nay', s.onShift,
+        s.onLeave ? 'Ngoài ra ' + s.onLeave + ' người nghỉ phép hoặc nghỉ lễ' : 'Toàn bộ trong diện đi làm', null)
+    ];
+    return '<div class="stat-strip">' + cards.join('') + '</div>';
+  }
+
+  function hmTriageCard(items) {
+    var inner;
+    if (!items.length) {
+      inner = '<div class="empty">Không còn việc tồn đọng trong ca — mọi task đã bàn giao và đóng.</div>';
+    } else {
+      inner = '<div class="h-triage">' + items.map(function (it) {
+        return '<div class="h-triage__item">' +
+          '<span class="h-triage__ico" aria-hidden="true">' + SOC.ico(it.icon, 18) + '</span>' +
+          '<span class="h-triage__txt"><b>' + SOC.esc(it.title) + '</b>' +
+          '<small>' + it.note + '</small></span>' +
+          '<span class="h-triage__act"><button type="button" class="btn btn-outline btn-sm" data-act="triage"' +
+          ' data-id="' + SOC.esc(it.id) + '" data-kind="' + SOC.esc(it.act) + '">' +
+          '<span class="btn-label">Mở</span></button></span>' +
+          '</div>';
+      }).join('') + '</div>';
+    }
+    return '<div class="card h-card-triage">' +
+      '<div class="card__head"><h2 class="section-heading">' + SOC.ico('inbox', 16) + ' Việc cần xử lý</h2>' +
+      '<span class="filter-count">' + items.length + ' mục</span></div>' +
+      inner + '</div>';
+  }
+
+  function hmRunCard(list) {
+    if (!list.length) {
+      return '<div class="card"><div class="card__head"><h2 class="section-heading">' +
+        SOC.ico('attendance', 16) + ' Ca đang chạy</h2></div>' +
+        '<div class="empty">Chưa có task nào mở.<br>Tạo task ở trang <b>Điểm danh</b> rồi nạp danh sách.</div></div>';
+    }
+    var rows = list.map(function (t) {
+      var total = Number(t.total) || 0, sc = Number(t.scanned) || 0, ex = Number(t.extra) || 0;
+      var pct = total ? Math.round(Math.min(total, sc) / total * 100) : 0;
+      return '<tr>' +
+        '<td data-label="Mã task" data-nolabel><b>' + SOC.esc(t.taskId) + '</b></td>' +
+        '<td data-label="Station">' + SOC.esc(t.station || '—') + '</td>' +
+        '<td data-label="Ca">' + SOC.slotCell(t.slotCode) + '</td>' +
+        '<td data-label="Team" data-hide="m">' + SOC.esc(t.team || '—') + '</td>' +
+        '<td class="h-cell" data-label="Tiến độ"><span class="num">' + sc + '/' + total +
+        (ex ? ' <span class="badge extra">Dư ' + ex + '</span>' : '') + '</span>' +
+        '<span class="meter"><span class="meter__fill" style="width:' + pct + '%"></span></span></td>' +
+        '<td data-label="Trạng thái" data-nolabel><span class="badge ' + SOC.esc(t.status) + '">' +
+        SOC.esc(t.status === 'open' ? 'Mở' : t.status === 'attend' ? 'Điểm danh' : 'Xong') + '</span></td>' +
+        '<td data-label="Người tạo" data-hide="m">' + SOC.esc(String(t.createdBy || '').split('@')[0] || '—') + '</td>' +
+        '<td data-label="Thao tác" data-nolabel><button type="button" class="btn btn-sm" data-act="triage"' +
+        ' data-kind="scan" data-id="' + SOC.esc(t.taskId) + '"><span class="btn-label">Vào quét</span></button></td>' +
+        '</tr>';
+    }).join('');
+    return '<div class="card"><div class="card__head"><h2 class="section-heading">' +
+      SOC.ico('attendance', 16) + ' Ca đang chạy</h2>' +
+      '<span class="filter-count">' + list.length + ' task chưa đóng</span></div>' +
+      '<div class="table-wrap"><table class="table--cards hm-runs"><caption class="sr-only">Các task chưa đóng, sắp theo mã task</caption>' +
+      '<thead><tr><th scope="col">Mã task</th><th scope="col">Station</th><th scope="col">Ca</th>' +
+      '<th scope="col">Team</th><th scope="col">Tiến độ</th><th scope="col">Trạng thái</th>' +
+      '<th scope="col">Người tạo</th><th scope="col">Thao tác</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table></div></div>';
+  }
+
+  function hmPaint() {
+    var sec = document.getElementById('viewHome');
+    if (!sec) return;
+    var s = hmStats();
+
+    SOC.pageActions('<button type="button" class="btn btn-outline" data-act="att">' +
+      '<span class="btn-label">Điểm danh</span><span class="btn-ico">' + SOC.ico('attendance', 16) + '</span></button>' +
+      '<button type="button" class="btn btn-outline" data-act="reload">' +
+      '<span class="btn-label">Cập nhật</span><span class="btn-ico">' + SOC.ico('refresh', 16) + '</span></button>');
+
+    sec.innerHTML = hmBand(s) + hmStrip(s) +
+      '<div class="split split--rev h-main">' + hmTriageCard(hmTriage(s)) + hmRunCard(s.running) + '</div>';
+
+    SOC.setCount('attendance', s.open);
+    SOC.setCount('leave', s.leavePending || null);
+    hmBind();
+  }
+
+  function hmBind() {
+    var nodes = document.querySelectorAll('#viewHome [data-act], #pageActions [data-act]');
+    Array.prototype.forEach.call(nodes, function (b) {
+      b.addEventListener('click', function () {
+        var act = b.getAttribute('data-act');
+        if (act === 'reload') { hmLoad(true); return; }
+        if (act === 'att') { SOC.selectPage('attendance'); return; }
+        if (act === 'triage') {
+          if (b.getAttribute('data-kind') === 'scan') SOC.openScan(b.getAttribute('data-id'));
+          else SOC.selectPage(b.getAttribute('data-id'));
+        }
+      });
+    });
+  }
+
+  function hmRender(ctx) {
+    var sec = document.getElementById('viewHome');
+    if (!sec) return;
+    var force = ctx && ctx.force === true;
+    if (!HM.tasks || force) {
+      sec.innerHTML = hmSkeleton();
+      hmLoad(false);
+      return;
+    }
+    hmPaint();
+    if (!hmFresh()) hmLoad(true);   /* số liệu đổi ở view khác hoặc đã quá TTL → nạp nền */
+  }
+
+  SOC.registerView('home', { section: 'viewHome', render: hmRender });
+
+  /*GHI CHÚ HỢP NHẤT [CHUNG]
+    - [CHUNG] SOC.dataGen()/bumpData() đã thay dataset.opsGen, nhưng vẫn là "mọi số liệu đổi là
+      nạp lại hết"; cần cơ chế hết hạn theo từng khoá (vd SOC.invalidate('taskList')).
+    - [CHUNG] getTaskListApi trả mảng trần trong khi mọi API khác trả {ok:…} → đề nghị api.js
+      chuẩn hoá một dạng; hiện các view phải phòng cả hai.
+    - [CHUNG] getTaskListApi không có cột "Vắng" nên số "chưa điểm danh" tính = total - scanned - extra.
+  */
+})();
