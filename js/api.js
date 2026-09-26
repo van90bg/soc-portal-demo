@@ -3,14 +3,14 @@
 (function () {
   'use strict';
   var RANK = { viewer: 1, operator: 2, manager: 3, admin: 4 };
-  /* Persona preview — chỉ đổi role/isEditor, giữ email để phần "của tôi" không rỗng */
+  /* Persona preview — danh tính synthetic KHỚP hồ sơ cấy trong mock-data (khóa OPS4677/7562/6219) */
   var PERSONAS = [
-    { key: 'viewer', label: 'Viewer', role: 'viewer', isEditor: false },
-    { key: 'operator', label: 'Operator', role: 'operator', isEditor: false },
-    { key: 'manager', label: 'Manager', role: 'manager', isEditor: false },
-    { key: 'admin', label: 'Admin', role: 'admin', isEditor: true }
+    { key: 'viewer', label: 'Viewer', role: 'viewer', email: 'viewer.staff@spx-demo.vn', opsId: 'OPS4677', name: 'Nguyễn Mai Anh', isEditor: false },
+    { key: 'operator', label: 'Operator', role: 'operator', email: 'operator.lead@spx-demo.vn', opsId: 'OPS7562', name: 'Trần Quốc Dũng', isEditor: false },
+    { key: 'manager', label: 'Manager', role: 'manager', email: 'manager.admin@spx-demo.vn', opsId: 'OPS6219', name: 'Lê Thành Nam', isEditor: false },
+    { key: 'admin', label: 'Admin', role: 'admin', email: 'admin.sys@spx-demo.vn', opsId: 'OPS6219', name: 'Lê Thành Nam', isEditor: true }
   ];
-  var SESSION = { email: 'quan.admin@spx.vn', role: 'admin', isEditor: true };
+  var SESSION = { email: 'admin.sys@spx-demo.vn', role: 'admin', isEditor: true, opsId: 'OPS6219', name: 'Lê Thành Nam' };
 
   var S = {
     staff: MOCK.staff.slice(),
@@ -89,12 +89,50 @@
     setPersona: function (key) {
       var p = PERSONAS.filter(function (x) { return x.key === key; })[0] || PERSONAS[PERSONAS.length - 1];
       SESSION.role = p.role; SESSION.isEditor = p.isEditor;
-      return delay({ ok: true, role: SESSION.role, isEditor: SESSION.isEditor, email: SESSION.email });
+      SESSION.email = p.email; SESSION.opsId = p.opsId; SESSION.name = p.name;
+      return delay({ ok: true, role: SESSION.role, isEditor: SESSION.isEditor, email: SESSION.email, opsId: SESSION.opsId, name: SESSION.name });
     },
 
     /* ---- Code.gs ---- */
     getMetaApi: function () {
-      return delay({ ok: true, appTitle: 'SOC Portal', userEmail: SESSION.email, role: SESSION.role, isEditor: SESSION.isEditor, canViewSchedule: true });
+      return delay({ ok: true, appTitle: 'SOC Portal', userEmail: SESSION.email, role: SESSION.role, isEditor: SESSION.isEditor, canViewSchedule: true, opsId: SESSION.opsId, name: SESSION.name });
+    },
+    /* hồ sơ của chính người đang đăng nhập — viewer chỉ đọc dữ liệu mình */
+    staffInfoSelfApi: function () {
+      if (!gate('viewer')) return delay(fail('Không đủ quyền', { staff: null }));
+      var s = S.staff.filter(function (x) { return x.opsId === SESSION.opsId; })[0]
+        || S.staff.filter(function (x) { return x.email === SESSION.email; })[0];
+      if (!s) return delay(fail('Không tìm thấy hồ sơ của bạn', { staff: null }));
+      var today = MOCK.DAY;
+      var code = (S.schedule[s.opsId] || {})[today] || '';
+      var pos = (S.positions[today] || {})[s.opsId] || null;
+      var att = null;
+      S.tasks.forEach(function (t) {
+        if (att || String(t.date || '').slice(0, 10) !== today) return;
+        var row = (S.logs[t.taskId] || []).filter(function (r) { return r.staffId === s.opsId; })[0];
+        if (row) att = { status: row.status, time: row.scannedAtText, taskId: t.taskId };
+      });
+      var mine = S.leave.filter(function (l) { return l.opsId === s.opsId || l.email === s.email; });
+      var slotRow = (MOCK.slots || []).filter(function (x) { return x.code === code; })[0];
+      var dur = {};
+      (MOCK.slots || []).forEach(function (x) {
+        var f = x.from.split(':'), t0 = x.to.split(':');
+        var mins = ((+t0[0]) * 60 + +t0[1]) - ((+f[0]) * 60 + +f[1]);
+        dur[x.code] = (mins <= 0 ? mins + 1440 : mins) / 60;
+      });
+      var sch = S.schedule[s.opsId] || {};
+      var workDays = 0, workHours = 0;
+      Object.keys(sch).forEach(function (d) {
+        if (d.slice(0, 7) !== MOCK.MONTH) return;
+        var c = String(sch[d] || '');
+        if (/^S\d+$/.test(c)) { workDays++; workHours += (dur[c] || 8); }
+      });
+      return delay({ ok: true, staff: s, shiftToday: code, shiftTime: slotRow ? slotRow.from + '–' + slotRow.to : '',
+        positionToday: pos, attToday: att,
+        leaveMine: mine,
+        monthSummary: { workDays: workDays, workHours: Math.round(workHours * 10) / 10,
+          leaveApproved: mine.filter(function (l) { return l.status === 'approved'; }).length,
+          leavePending: mine.filter(function (l) { return l.status === 'pending'; }).length } });
     },
     getFilterOptionsApi: function () {
       if (!gate('operator')) return delay(fail('Không đủ quyền', { stationGroups: [], defaults: null, lists: null }));

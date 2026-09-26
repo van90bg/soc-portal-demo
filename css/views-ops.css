@@ -56,6 +56,36 @@
 .h-cell { min-width: 0; }
 .h-cell .meter { margin-top: 2px; }
 
+/* Role HUD — Hero nhân viên (viewer) · Workbench (operator) · dải tỷ lệ (manager/admin) */
+.h-hero--staff { display: flex; flex-direction: column; gap: var(--space-3); }
+.h-hero__meta { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-6); }
+.h-hero__kv { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.h-hero__kv small { font-size: var(--text-xs); color: var(--muted); }
+.h-hero__kv b { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--text); }
+.h-hero__status { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--muted); flex-wrap: wrap; }
+.h-hero__status b { color: var(--text); }
+.h-hero__off { font-size: var(--text-md); color: var(--muted); display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.h-hero__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.h-hero__stats { margin-top: var(--space-3); }
+
+.h-workbench { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-4); }
+.h-task-card { display: flex; flex-direction: column; gap: var(--space-2); }
+.h-task-card__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.h-task-card__meta { font-size: var(--text-sm); color: var(--muted); display: flex; align-items: center; gap: var(--space-1); flex-wrap: wrap; }
+.h-task-card__meter { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-sm); color: var(--muted); }
+.h-meter--stacked { display: flex; flex: 1; min-width: 0; height: var(--meter-h); border-radius: var(--radius-full); overflow: hidden; background: var(--border-soft); }
+.h-meter__seg { height: 100%; }
+.h-meter__seg--scanned { background: var(--success); }
+.h-meter__seg--pending { background: var(--warning); }
+.h-meter__seg--extra { background: var(--accent); }
+.h-task-card__act { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.h-rate { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-1) var(--space-1); }
+.h-rate__label { font-size: var(--text-xs); color: var(--muted); white-space: nowrap; }
+.h-rate__bar { flex: 1; min-width: 0; height: var(--meter-h); border-radius: var(--radius-full); overflow: hidden; background: var(--border-soft); }
+.h-rate__fill { display: block; height: 100%; background: var(--primary); border-radius: inherit; }
+.h-rate__num { font-size: var(--text-sm); color: var(--text); white-space: nowrap; }
+
 /* =====================================================================
    ĐIỂM DANH — danh sách task
    ===================================================================== */
@@ -143,6 +173,10 @@
   .h-band__facts { padding-bottom: 0; }
   .h-triage__item { grid-template-columns: var(--space-7) minmax(0, 1fr); }
   .h-triage__act { grid-column: 2; justify-self: start; }
+  .h-hero__stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
+  .h-hero__actions .btn { flex: 1 1 46%; min-height: 44px; }
+  .h-task-card__act .btn { flex: 1 1 46%; min-height: 44px; }
+  .h-rate { flex-wrap: wrap; }
 
   .sc-layout.scan-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; }
   .sc-col { overflow: visible; padding-right: 0; }

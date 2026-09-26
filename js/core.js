@@ -40,14 +40,20 @@ var SOC = (function () {
   var SIDE_ROLES = { stats: 'manager', data: 'manager', admin: 'admin', config: 'editor', information: 'viewer', leave: 'operator' };
 
   var SCAN_TASK = null;
-  /* vào màn quét của 1 task: view-scan đăng ký handler, core giữ con trỏ task đang mở */
-  function openScan(taskId) {
+  var SCAN_ROSTER = false;
+  /* vào màn quét của 1 task: view-scan đăng ký handler, core giữ con trỏ task đang mở;
+     opts.roster = mở luôn modal Nạp danh sách khi bảng sẵn sàng (lối tắt từ Trang chủ) */
+  function openScan(taskId, opts) {
     SCAN_TASK = taskId || null;
+    SCAN_ROSTER = !!(opts && opts.roster);
     selectPage('scan');
+  }
+  function consumeScanRoster() {
+    var v = SCAN_ROSTER; SCAN_ROSTER = false; return v;
   }
 
   var views = {};
-  var state = { page: 'home', role: 'operator', email: '', isEditor: false, canViewSchedule: false, loading: false, sound: true };
+  var state = { page: 'home', role: 'operator', email: '', opsId: '', name: '', isEditor: false, canViewSchedule: false, loading: false, sound: true };
 
   /* ---------- helper escape/format ---------- */
   function esc(v) {
@@ -423,8 +429,13 @@ var SOC = (function () {
     api.setPersona(key).then(function (r) {
       if (!r || !r.ok) return;
       state.role = r.role; state.isEditor = !!r.isEditor;
+      state.email = r.email || state.email; state.opsId = r.opsId || ''; state.name = r.name || '';
       var rl = document.getElementById('sideRole');
       if (rl) rl.textContent = (r.isEditor ? 'editor · ' : '') + r.role;
+      ['userEmailM2', 'userEmail'].forEach(function (id) {
+        var el = document.getElementById(id); if (el) el.textContent = state.email;
+      });
+      var av = document.getElementById('sideAvatar'); if (av) av.textContent = initials(state.email || 'KH');
       renderRolePreview(); renderSidebar();
       selectPage(visiblePages().indexOf(state.page) < 0 ? 'home' : state.page);
       toast('Đang xem với quyền ' + r.role);
@@ -558,9 +569,10 @@ var SOC = (function () {
     api.getMetaApi().then(function (r) {
       if (r && r.ok) {
         meta = r; state.role = r.role || 'operator'; state.email = r.userEmail || '';
+        state.opsId = r.opsId || ''; state.name = r.name || '';
         state.isEditor = !!r.isEditor; state.canViewSchedule = r.canViewSchedule !== false;
       }
-      var mail = meta.email || 'Khách (chưa đăng nhập)';
+      var mail = meta.userEmail || 'Khách (chưa đăng nhập)';
       ['userEmailM2', 'userEmail'].forEach(function (id) {
         var el = document.getElementById(id); if (el) el.textContent = mail;
       });
@@ -862,7 +874,7 @@ var SOC = (function () {
     registerView: registerView, selectPage: selectPage, refreshView: refreshView, setCount: setCount,
     showSection: showSection, renderSidebar: renderSidebar, visiblePages: visiblePages,
     atLeast: atLeast, getMeta: getMeta, boot: boot, wireChrome: wireChrome,
-    openScan: openScan, currentScanTask: function () { return SCAN_TASK; },
+    openScan: openScan, currentScanTask: function () { return SCAN_TASK; }, consumeScanRoster: consumeScanRoster,
     setTheme: setTheme, toggleTheme: toggleTheme, setSound: setSound, toggleSound: toggleSound, beep: beep,
     toast: toast, confirm: confirmDialog, setBtnBusy_: setBtnBusy_, pageActions: pageActions, trapFocus: trapFocus,
     esc: esc, ico: ico, icon: icon, badgeShift: badgeShift, badgeStatus: badgeStatus, shiftCategory: shiftCategory,

@@ -69,6 +69,8 @@
       SN.task = r.task; SN.log = (r.log || []).slice(); SN.counters = r.counters || scCounters(SN.log);
       SN.gen = SOC.dataGen(); SN.ts = Date.now();
       if (SOC.state.page === 'scan') scPatch();
+      var wantRoster = SOC.consumeScanRoster();
+      if (wantRoster && SOC.state.page === 'scan' && scCanLoad()) rsOpen(null);
     }, function (e) {
       SN.loading = false;
       if (seq !== SN.seq) return;
