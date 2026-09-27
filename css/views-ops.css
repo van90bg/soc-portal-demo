@@ -215,7 +215,6 @@
    không còn cảnh mồ côi chiếm 1/5 chiều ngang. Dưới 1260px giữ auto-fit (4 cột → 4+2, mobile → 2+2+2).
    Số cột pin cứng nên thu/ mở sidebar không làm đổi mật độ đã duyệt. ---- */
 @media (min-width: 1260px) {
-  #viewHome .stat-strip { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-  #viewHome .stat-strip > :last-child { grid-column: 1 / -1; }
+  #viewHome .stat-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 

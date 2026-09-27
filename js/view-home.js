@@ -213,20 +213,11 @@
   }
 
   function hmStrip(s) {
+    /* hub ưu tiên nhân sự — khối task chỉ giữ 3 chỉ số vận hành tối thiểu */
     var cards = [
-      hmStatCard('Task đang mở', s.open,
-        'Chưa đóng trong 30 ngày', s.open ? 'warn' : 'ok'),
-      hmStatCard('Đã điểm danh hôm nay', s.scanned,
-        'Lượt quét ngày ' + SOC.fmtDate(s.refDay), 'ok'),
-      hmStatCard('Chưa điểm danh hôm nay', s.pending,
-        'Trong danh sách, chưa quét', s.pending ? 'warn' : null),
-      hmStatCard('Dư hôm nay', s.extra,
-        'Quét ngoài danh sách — rà trước khi đóng', s.extra ? 'warn' : null),
-      hmStatCard('Đơn nghỉ chờ duyệt', s.leavePending,
-        SOC.atLeast('operator') ? 'Chờ duyệt trong tháng' : 'Cần quyền operator',
-        s.leavePending ? 'warn' : null),
-      hmStatCard('Người có lịch hôm nay', s.onShift,
-        s.onLeave ? s.onLeave + ' người nghỉ phép/lễ' : 'Toàn bộ đi làm', null)
+      hmStatCard('Task đang mở', s.open, 'Chưa đóng trong 30 ngày', s.open ? 'warn' : 'ok'),
+      hmStatCard('Chưa điểm danh hôm nay', s.pending, 'Trong danh sách, chưa quét', s.pending ? 'warn' : null),
+      hmStatCard('Dư hôm nay', s.extra, 'Quét ngoài danh sách — rà trước khi đóng', s.extra ? 'warn' : null)
     ];
     return '<div class="stat-strip">' + cards.join('') + '</div>';
   }
@@ -423,6 +414,25 @@
       ' · Nghỉ tuần: ' + a.off + ' · Đơn chờ duyệt: <b>' + a.leavePending + '</b></div></div>';
   }
 
+  function hmLeavePendingCard() {
+    if (!HM.leave || !HM.leave.ok) return '';
+    var rows = (HM.leave.rows || []).filter(function (r) { return r.status === 'pending'; })
+      .sort(function (a, b) { return String(a.dateString).localeCompare(String(b.dateString)); });
+    if (!rows.length) return '';
+    var items = rows.slice(0, 6).map(function (r) {
+      return '<div class="h-triage__item">' +
+        '<span class="h-triage__ico" aria-hidden="true">' + SOC.ico('leave', 18) + '</span>' +
+        '<span class="h-triage__txt"><b>' + SOC.esc(r.name) + ' · ' + SOC.esc(r.type) + '</b>' +
+        '<small>' + SOC.esc(SOC.fmtDate(r.dateString)) + ' · ' + SOC.esc(r.opsId) + '</small></span>' +
+        '<span class="h-triage__act"><button type="button" class="btn btn-outline btn-sm" data-act="goto-leave">' +
+        '<span class="btn-label">Mở</span></button></span></div>';
+    }).join('');
+    return '<div class="card h-people">' +
+      '<div class="card__head"><h2 class="section-heading">' + SOC.ico('leave', 16) + ' Đơn nghỉ chờ duyệt</h2>' +
+      '<span class="filter-count">' + rows.length + ' đơn</span></div>' +
+      '<div class="h-triage">' + items + '</div></div>';
+  }
+
   function hmPaint() {
     var sec = document.getElementById('viewHome');
     if (!sec) return;
@@ -438,7 +448,7 @@
     } else if (!SOC.atLeast('manager')) {
       sec.innerHTML = hmBand(s) + hmStaffHero() + hmStaffStats();
     } else {
-      sec.innerHTML = hmBand(s) + hmRate(s) + hmPeopleCard(HM.att) + hmStrip(s) +
+      sec.innerHTML = hmBand(s) + hmRate(s) + hmPeopleCard(HM.att) + hmLeavePendingCard() + hmStrip(s) +
         '<div class="split split--rev h-main">' + hmTriageCard(hmTriage(s)) + hmRunCard(s.running) + '</div>';
     }
 
@@ -458,6 +468,7 @@
         if (act === 'goto-personal') { SOC.selectPage('schedule-personal'); return; }
         if (act === 'create-leave') { SOC.selectPage('leave'); return; }
         if (act === 'quick-roster') { SOC.openScan(b.getAttribute('data-id'), { roster: true }); return; }
+        if (act === 'goto-leave') { SOC.selectPage('leave'); return; }
         if (act === 'triage') {
           if (b.getAttribute('data-kind') === 'scan') SOC.openScan(b.getAttribute('data-id'));
           else SOC.selectPage(b.getAttribute('data-id'));
