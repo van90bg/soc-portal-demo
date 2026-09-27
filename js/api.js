@@ -102,6 +102,21 @@
     void d;
     return out;
   }
+  /* Lịch (tháng/cá nhân/ngày) chỉ dành cho Nhân sự đang làm việc có dòng trong ma trận —
+     thời vụ không cố định nằm ngoài roster, không xếp lịch, không hiển thị ở 3 view này. */
+  function rosterEmployees() {
+    var out = [];
+    Object.keys(S.schedule).forEach(function (id) {
+      if (id === '__seeded__') return;
+      var s = S.staff.filter(function (x) { return x.opsId === id && x.valid; })[0];
+      if (s) out.push({ id: s.opsId, name: s.name, title: s.rank });
+    });
+    return out;
+  }
+  function rosterSlim() {
+    return rosterEmployees().map(function (e) { return { opsId: e.id, name: e.name }; });
+  }
+
   function ensureScheduleMonth(month) {
     if (S.schedule.__seeded__ === month) return;
     S.schedule.__seeded__ = month;
@@ -468,16 +483,16 @@
       ensureScheduleMonth(m);
       if (!gate('viewer')) return delay(fail('Không đủ quyền'));
       return delay({
-        ok: true, month: m, employees: MOCK.employees, schedule: S.schedule, daysInMonth: monthDays(m),
-        staffListSlim: MOCK.staffListSlim, staffInfoSelf: { opsId: 'OPS1001', name: S.staff[0].name }, message: ''
+        ok: true, month: m, employees: rosterEmployees(), schedule: S.schedule, daysInMonth: monthDays(m),
+        staffListSlim: rosterSlim(), staffInfoSelf: { opsId: 'OPS1001', name: S.staff[0].name }, message: ''
       });
     },
     getScheduleMonthWithPositionApi: function (month, year) {
       var off = offStation(); if (off) return delay(off);
       var m = normalizeMonth(month, year);
       return delay({
-        ok: true, month: m, employees: MOCK.employees, schedule: S.schedule, daysInMonth: monthDays(m),
-        staffListSlim: MOCK.staffListSlim, staffInfoSelf: { opsId: 'OPS1001', name: S.staff[0].name },
+        ok: true, month: m, employees: rosterEmployees(), schedule: S.schedule, daysInMonth: monthDays(m),
+        staffListSlim: rosterSlim(), staffInfoSelf: { opsId: 'OPS1001', name: S.staff[0].name },
         positions: S.positions, message: ''
       });
     },

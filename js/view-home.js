@@ -65,7 +65,7 @@
       items.push({
         rank: 0, icon: 'alert', id: 'leave',
         title: soon.length + ' đơn nghỉ chờ duyệt trong 24h' + (soon[0] ? ' — sớm nhất ngày ' + SOC.fmtDate(soon[0].dateString) : ''),
-        note: 'Vào trang Xin nghỉ để duyệt hoặc từ chối trước ca tới.',
+        note: 'Vào trang Đăng ký nghỉ để duyệt hoặc từ chối trước ca tới.',
         act: 'goto'
       });
     }
@@ -100,7 +100,7 @@
       items.push({
         rank: 4, icon: 'leave',
         title: s.leavePending + ' đơn nghỉ chờ duyệt' + (d ? ' — sớm nhất ngày ' + SOC.fmtDate(d.dateString) : ''),
-        note: 'Vào trang Xin nghỉ để duyệt hoặc từ chối.',
+        note: 'Vào trang Đăng ký nghỉ để duyệt hoặc từ chối.',
         act: 'goto', id: 'leave'
       });
     }
@@ -187,7 +187,7 @@
 
   function hmBand(s) {
     var daily = SOC.atLeast('manager')
-      ? '<button type="button" class="btn btn-outline btn-sm" data-act="daily"><span class="btn-label">Điều phối ngày</span>' +
+      ? '<button type="button" class="btn btn-outline btn-sm" data-act="daily"><span class="btn-label">Lịch ngày</span>' +
         '<span class="btn-ico">' + SOC.ico('calendar', 16) + '</span></button>'
       : '';
     return '<div class="h-band">' +
@@ -312,7 +312,7 @@
       head = '<div class="h-hero__status">' + SOC.badgeStatus('-') + '<span>Quét mã ở màn Điểm danh để có mặt hôm nay.</span></div>';
     }
     var pos = d.positionToday;
-    var posTxt = pos ? SOC.esc((pos.door || '—') + (pos.role ? ' · ' + pos.role : '')) : 'Chưa gán vị trí — xem Điều phối ngày';
+    var posTxt = pos ? SOC.esc((pos.door || '—') + (pos.role ? ' · ' + pos.role : '')) : 'Chưa gán vị trí — xem Lịch ngày';
     return '<div class="card h-hero--staff">' +
       '<div class="card__head"><h2 class="section-heading">' + SOC.ico('attendance', 16) +
       ' Ca của bạn hôm nay</h2>' + SOC.slotCell(code || '—') + '</div>' +

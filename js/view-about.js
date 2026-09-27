@@ -11,12 +11,12 @@
       note: 'Nhân sự chỉ hiện người còn hợp lệ; mục Lịch cần tên bạn có trong danh bạ.'
     },
     operator: {
-      see: 'Toàn bộ nhóm viewer + Điểm danh · Màn quét · Xin nghỉ',
+      see: 'Toàn bộ nhóm viewer + Điểm danh · Màn quét · Đăng ký nghỉ',
       do: 'Tạo task, nạp danh sách, quét mã, bàn giao, đóng/mở lại task, gửi và hủy đơn nghỉ của mình.',
-      note: 'Không sửa được ca trong lịch tháng và không xem được Thống kê/Dữ liệu chấm công.'
+      note: 'Không sửa được ca trong lịch tháng và không xem được Thống kê/Dữ liệu.'
     },
     manager: {
-      see: 'Toàn bộ nhóm operator + Thống kê · Dữ liệu chấm công',
+      see: 'Toàn bộ nhóm operator + Thống kê · Dữ liệu',
       do: 'Sửa phân công vị trí theo cửa, tra lịch sử quét của từng mã OPS, đọc báo cáo hợp đồng × ca.',
       note: 'Vẫn không duyệt đơn nghỉ và không sửa được danh bạ.'
     },
@@ -92,7 +92,7 @@
       abDefs([
         ['Điểm danh', 'Quét mã từng người ở đầu ca và lần nữa khi bàn giao, để lại dấu vết giờ vào/ra cho từng ca.'],
         ['Lịch', 'Đọc lịch tháng của kho: ai làm ca nào ngày nào, nghỉ loại gì, phân công theo cửa ra sao.'],
-        ['Xin nghỉ', 'Nhân viên gửi đơn, admin duyệt — ngày được duyệt ghi thẳng loại nghỉ lên lịch.'],
+        ['Đăng ký nghỉ', 'Nhân viên gửi đơn, Supervisor/Lead duyệt — ngày được duyệt ghi thẳng loại nghỉ lên lịch.'],
         ['Nhật ký', 'Mọi lần tạo, đóng, sửa, duyệt đều được ghi lại để truy vết.']
       ]);
   }

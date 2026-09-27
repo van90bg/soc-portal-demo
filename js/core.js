@@ -26,12 +26,12 @@ var SOC = (function () {
     attendance:          { group: 'Vận hành',  label: 'Điểm danh',      section: 'viewTasks',               eyebrow: 'OPS / ATTENDANCE',  title: 'Điểm danh',           desc: 'Đối chiếu danh sách theo Station / Ca / Team — tạo task, quét giờ có mặt, bàn giao' },
     scan:                { group: 'Vận hành',  label: 'Màn quét',       section: 'viewScan',                eyebrow: 'OPS / ATTENDANCE',  title: 'Màn quét',            desc: 'Quét mã từng nhân viên cho ca đang mở', noNav: true },
     stats:               { group: 'Vận hành',  label: 'Thống kê',       section: 'viewStats',               eyebrow: 'OPS / INSIGHTS',    title: 'Thống kê',            desc: 'Contract Type × Ca · Agency × Ca — lượt chấm công thực tế (lọc Station + Ngày)' },
-    leave:               { group: 'Vận hành',  label: 'Xin nghỉ',       section: 'viewLeave',               eyebrow: 'WORKFORCE / LEAVE', title: 'Xin nghỉ',            desc: 'Đơn nghỉ của tôi và đơn chờ duyệt trong team' },
     schedule:            { group: 'Workforce', label: 'Lịch tháng',      section: 'viewSchedule',            eyebrow: 'WORKFORCE / SCHEDULE', title: 'Lịch làm việc',     desc: 'Ma trận nhân viên × ngày, đọc từ hệ thống lịch của kho' },
     'schedule-personal': { group: 'Workforce', label: 'Lịch cá nhân',   section: 'viewSchedulePersonal',    eyebrow: 'WORKFORCE / PEOPLE', title: 'Lịch cá nhân',       desc: 'Lịch tháng của một người kèm bảng chấm công' },
-    'schedule-daily':    { group: 'Workforce', label: 'Điều phối ngày', section: 'viewScheduleDaily',   eyebrow: 'WORKFORCE / DAILY',  title: 'Điều phối ngày',   desc: 'Một ngày làm việc, hai góc nhìn: ai làm ca nào và ai đứng cửa nào — gán vị trí tại chỗ' },
+    'schedule-daily':    { group: 'Workforce', label: 'Lịch ngày',      section: 'viewScheduleDaily',   eyebrow: 'WORKFORCE / DAILY',  title: 'Lịch ngày',        desc: 'Một ngày làm việc, hai góc nhìn: ai làm ca nào và ai đứng cửa nào — gán vị trí tại chỗ' },
+    leave:               { group: 'Workforce', label: 'Đăng ký nghỉ',   section: 'viewLeave',               eyebrow: 'WORKFORCE / LEAVE', title: 'Đăng ký nghỉ',      desc: 'Đơn nghỉ của tôi và đơn chờ duyệt trong team' },
     information:         { group: 'Workforce', label: 'Nhân sự',        section: 'viewInformation',         eyebrow: 'WORKFORCE / PEOPLE', title: 'Nhân sự',            desc: 'Danh bạ team đọc từ sheet Information' },
-    data:                { group: 'Hệ thống',  label: 'Dữ liệu chấm công', section: 'viewStaff',            eyebrow: 'SYSTEM / DATA',     title: 'Dữ liệu chấm công',   desc: 'Nguồn StaffData thô theo tháng' },
+    data:                { group: 'Hệ thống',  label: 'Dữ liệu',        section: 'viewStaff',            eyebrow: 'SYSTEM / DATA',     title: 'Dữ liệu',           desc: 'Nguồn StaffData thô theo tháng' },
     admin:               { group: 'Hệ thống',  label: 'Quản trị',       section: 'viewAdmin',               eyebrow: 'SYSTEM / AUDIT',    title: 'Quản trị',            desc: 'Nhật ký hoạt động và dọn dữ liệu cũ' },
     config:              { group: 'Hệ thống',  label: 'Cấu hình',       section: 'viewConfig',              eyebrow: 'SYSTEM / SETTINGS', title: 'Cấu hình',            desc: 'Danh mục vận hành và phân quyền truy cập' },
     about:               { group: 'Hệ thống',  label: 'Giới thiệu',     section: 'viewAbout',               eyebrow: 'SYSTEM / HELP',     title: 'Giới thiệu SPX SOC Portal', desc: 'Hướng dẫn điểm danh · ký hiệu ca · ghi chú sử dụng' }
@@ -359,6 +359,7 @@ var SOC = (function () {
     nav.querySelectorAll('.side-item').forEach(function (b) {
       b.addEventListener('click', function () { selectPage(b.getAttribute('data-page')); });
     });
+    Object.keys(SIDE_COUNTS).forEach(applyCount);
   }
 
   function setPageChrome(page) {
@@ -452,11 +453,20 @@ var SOC = (function () {
     var v = views[page || state.page];
     if (v && v.render) v.render({ force: true });
   }
-  function setCount(page, n) {
+  /* Bo dem sidebar: giu gia tri qua các lan ve lại nav — renderSidebar trước đây reset
+     hidden=true khiên đếm "lúc hiện lúc không" (chỉ home goi setCount). */
+  var SIDE_COUNTS = {};
+  function applyCount(page) {
     var el = document.querySelector('[data-count="' + page + '"]');
     if (!el) return;
-    if (n === null || n === undefined || n === '') { el.hidden = true; return; }
-    el.hidden = false; el.textContent = n;
+    var has = Object.prototype.hasOwnProperty.call(SIDE_COUNTS, page);
+    el.hidden = !has;
+    if (has) el.textContent = SIDE_COUNTS[page];
+  }
+  function setCount(page, n) {
+    if (n === null || n === undefined || n === '') delete SIDE_COUNTS[page];
+    else SIDE_COUNTS[page] = n;
+    applyCount(page);
   }
 
   /* ---------- theme ---------- */

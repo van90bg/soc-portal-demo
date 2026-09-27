@@ -189,7 +189,7 @@
 
     var foot = '<tr><td colspan="' + COLS.length + '">Tổng ' + list.length + ' dòng · ' +
       list.filter(isValid).length + ' NV hợp lệ (Matching Type Exact)</td></tr>';
-    return '<table class="dt-table table--cards"><caption class="sr-only">Dữ liệu chấm công thô StaffData, 20 cột</caption>' +
+    return '<table class="dt-table table--cards"><caption class="sr-only">Dữ liệu thô StaffData, 20 cột</caption>' +
       '<thead>' + head + '</thead><tbody>' + body + '</tbody><tfoot>' + foot + '</tfoot></table>';
   }
 
