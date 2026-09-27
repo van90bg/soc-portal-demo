@@ -64,8 +64,8 @@
     if (soon.length) {
       items.push({
         rank: 0, icon: 'alert', id: 'leave',
-        title: soon.length + ' đơn nghỉ chờ duyệt trong 24h' + (soon[0] ? ' — sớm nhất ngày ' + SOC.fmtDate(soon[0].dateString) : ''),
-        note: 'Vào trang Đăng ký nghỉ để duyệt hoặc từ chối trước ca tới.',
+        title: soon.length + ' đơn nghỉ chờ trong 24h' + (soon[0] ? ' — sớm nhất ' + SOC.fmtDate(soon[0].dateString) : ''),
+        note: 'Mở Đăng ký nghỉ để duyệt.',
         act: 'goto'
       });
     }
@@ -76,8 +76,8 @@
       items.push({
         rank: total ? 2 : 1,
         icon: total ? 'scan' : 'inbox',
-        title: 'Task ' + t.taskId + ' đang Mở' + (overdue ? ' — quá giờ chưa bàn giao' : total ? ' nhưng chưa bàn giao' : ' và chưa có danh sách'),
-        note: (total ? 'NV quét sau bước bàn giao mới ghi giờ điểm danh — ' : 'Nạp danh sách theo Station/Ca rồi mới quét — ')
+        title: 'Task ' + t.taskId + ' mở' + (overdue ? ' — quá giờ' : total ? ' — chưa bàn giao' : ' — chưa nạp DS'),
+        note: (total ? 'Chưa bàn giao · ' : 'Chưa nạp DS · ')
           + SOC.esc(t.station || 'chưa rõ station') + ' · ' + SOC.slotCell(t.slotCode),
         act: 'scan', id: t.taskId
       });
@@ -88,8 +88,8 @@
       var overdue = String(t.date || '').slice(0, 10) < hmToday();
       items.push({
         rank: 3, icon: 'alert',
-        title: 'Task ' + t.taskId + ' đang điểm danh, chưa đóng' + (overdue ? ' — quá giờ' : ''),
-        note: 'Đã điểm danh ' + sc + '/' + total + ' · ' + SOC.esc(t.station || '') + ' · ' + SOC.slotCell(t.slotCode),
+        title: 'Task ' + t.taskId + ' đang điểm danh' + (overdue ? ' — quá giờ' : ' — chưa đóng'),
+        note: sc + '/' + total + ' · ' + SOC.esc(t.station || '') + ' · ' + SOC.slotCell(t.slotCode),
         act: 'scan', id: t.taskId
       });
     });
@@ -99,8 +99,8 @@
       var d = first[0];
       items.push({
         rank: 4, icon: 'leave',
-        title: s.leavePending + ' đơn nghỉ chờ duyệt' + (d ? ' — sớm nhất ngày ' + SOC.fmtDate(d.dateString) : ''),
-        note: 'Vào trang Đăng ký nghỉ để duyệt hoặc từ chối.',
+        title: s.leavePending + ' đơn chờ duyệt' + (d ? ' — sớm nhất ' + SOC.fmtDate(d.dateString) : ''),
+        note: 'Mở Đăng ký nghỉ để duyệt.',
         act: 'goto', id: 'leave'
       });
     }
@@ -185,6 +185,10 @@
       '<span class="stat-card__note">' + note + '</span></div>';
   }
 
+  function hmUserName() {
+    return String(SOC.state.name || SOC.state.email || '').split('@')[0] || 'bạn';
+  }
+
   function hmBand(s) {
     var daily = SOC.atLeast('manager')
       ? '<button type="button" class="btn btn-outline btn-sm" data-act="daily"><span class="btn-label">Lịch ngày</span>' +
@@ -195,6 +199,7 @@
       '<span class="view-topbar-eyebrow">Nhịp thời gian</span>' +
       '<div class="h-band__clock" id="homeClock" role="timer" aria-live="off">--:--:--</div>' +
       '<div class="h-band__date" id="homeDate"></div>' +
+      '<div class="h-band__hello">Chào <b>' + SOC.esc(hmUserName()) + '</b></div>' +
       '</div>' +
       '<div class="h-band__facts">' +
       '<span class="pill">' + SOC.esc(SOC.fmtDate(s.refDay)) + '</span>' +
@@ -205,18 +210,18 @@
   function hmStrip(s) {
     var cards = [
       hmStatCard('Task đang mở', s.open,
-        'Chưa bấm Đóng task trong danh sách 30 ngày gần nhất', s.open ? 'warn' : 'ok'),
+        'Chưa đóng trong 30 ngày', s.open ? 'warn' : 'ok'),
       hmStatCard('Đã điểm danh hôm nay', s.scanned,
-        'Tổng lượt có giờ điểm danh của mọi task ghi ngày ' + SOC.fmtDate(s.refDay), 'ok'),
+        'Lượt quét ngày ' + SOC.fmtDate(s.refDay), 'ok'),
       hmStatCard('Chưa điểm danh hôm nay', s.pending,
-        'Tổng NV trong danh sách nhưng chưa có giờ điểm danh', s.pending ? 'warn' : null),
+        'Trong danh sách, chưa quét', s.pending ? 'warn' : null),
       hmStatCard('Dư hôm nay', s.extra,
-        'NV quét ngoài danh sách được nạp — cần rà lại trước khi đóng ca', s.extra ? 'warn' : null),
+        'Quét ngoài danh sách — rà trước khi đóng', s.extra ? 'warn' : null),
       hmStatCard('Đơn nghỉ chờ duyệt', s.leavePending,
-        SOC.atLeast('operator') ? 'Trạng thái pending trong tháng này' : 'Cần quyền operator để đọc đơn nghỉ',
+        SOC.atLeast('operator') ? 'Chờ duyệt trong tháng' : 'Cần quyền operator',
         s.leavePending ? 'warn' : null),
       hmStatCard('Người có lịch hôm nay', s.onShift,
-        s.onLeave ? 'Ngoài ra ' + s.onLeave + ' người nghỉ phép hoặc nghỉ lễ' : 'Toàn bộ trong diện đi làm', null)
+        s.onLeave ? s.onLeave + ' người nghỉ phép/lễ' : 'Toàn bộ đi làm', null)
     ];
     return '<div class="stat-strip">' + cards.join('') + '</div>';
   }
@@ -309,7 +314,7 @@
       head = '<div class="h-hero__status">' + SOC.badgeStatus('Đã điểm danh') +
         '<span>Có mặt lúc <b class="num">' + SOC.esc(String(att.time || '').slice(0, 5)) + '</b></span></div>';
     } else {
-      head = '<div class="h-hero__status">' + SOC.badgeStatus('-') + '<span>Quét mã ở màn Điểm danh để có mặt hôm nay.</span></div>';
+      head = '<div class="h-hero__status">' + SOC.badgeStatus('-') + '<span>Quét mã ở màn Điểm danh.</span></div>';
     }
     var pos = d.positionToday;
     var posTxt = pos ? SOC.esc((pos.door || '—') + (pos.role ? ' · ' + pos.role : '')) : 'Chưa gán vị trí — xem Lịch ngày';
@@ -323,9 +328,9 @@
       '<span class="h-hero__kv"><small>Vị trí</small><b>' + posTxt + '</b></span>' +
       '</div>' + head +
       '<div class="h-hero__actions">' +
-      '<button type="button" class="btn btn-outline" data-act="goto-personal"><span class="btn-label">Xem lịch cá nhân</span>' +
+      '<button type="button" class="btn" data-act="goto-personal"><span class="btn-label">Xem lịch cá nhân</span>' +
       '<span class="btn-ico">' + SOC.ico('personal', 16) + '</span></button>' +
-      '<button type="button" class="btn" data-act="create-leave"><span class="btn-label">Gửi đơn xin nghỉ</span>' +
+      '<button type="button" class="btn btn-outline" data-act="create-leave"><span class="btn-label">Gửi đơn xin nghỉ</span>' +
       '<span class="btn-ico">' + SOC.ico('leave', 16) + '</span></button>' +
       '</div></div>';
   }
@@ -337,9 +342,9 @@
     var mine = (d.leaveMine || []).length;
     return '<div class="stat-strip h-hero__stats">' +
       hmStatCard('Ngày công T' + hmToday().slice(5, 7), m.workDays || 0,
-        'Số ngày có ca trong ma trận lịch tháng của bạn', 'ok') +
+        'Theo ma trận lịch tháng', 'ok') +
       hmStatCard('Giờ làm', Number(m.workHours || 0).toFixed(1),
-        'Tổng theo khung giờ ca chuẩn (Valid)', null) +
+        'Theo khung giờ ca chuẩn', null) +
       hmStatCard('Đơn nghỉ của tôi', mine,
         (m.leaveApproved || 0) + ' đã duyệt · ' + (m.leavePending || 0) + ' đang chờ', m.leavePending ? 'warn' : null) +
       '</div>';
@@ -351,7 +356,7 @@
     if (!list.length) {
       return '<div class="h-workbench"><div class="card"><div class="card__head"><h2 class="section-heading">' +
         SOC.ico('scan', 16) + ' Bàn làm việc ca trực</h2></div>' +
-        '<div class="empty">Không có task nào đang mở hôm nay.<br>Sang <b>Điểm danh</b> để tạo task cho ca tới.</div></div></div>';
+        '<div class="empty">Không có task mở.<br>Sang <b>Điểm danh</b> để tạo task.</div></div></div>';
     }
     return '<div class="h-workbench"><div class="card__head"><h2 class="section-heading">' +
       SOC.ico('scan', 16) + ' Bàn làm việc ca trực</h2><span class="filter-count">' + list.length + ' task</span></div>' +
@@ -373,7 +378,7 @@
             ? '<div class="h-task-card__meter"><span class="h-meter--stacked" role="img" aria-label="Đã điểm danh ' + sc + '/' + total + (ex ? ', dư ' + ex : '') + '">' +
               seg(sc, 'scanned') + seg(pend, 'pending') + seg(ex, 'extra') + '</span>' +
               '<span class="num">' + sc + '/' + total + ' · ' + pct + '%' + (ex ? ' · Dư ' + ex : '') + '</span></div>'
-            : '<div class="h-task-card__meta">Chưa có danh sách — nạp theo Ca × hợp đồng rồi mới quét.</div>') +
+            : '<div class="h-task-card__meta">Chưa có danh sách — nạp theo Ca × hợp đồng.</div>') +
           '<div class="h-task-card__act">' +
           '<button type="button" class="btn btn-sm" data-act="triage" data-kind="scan" data-id="' + SOC.esc(t.taskId) + '">' +
           '<span class="btn-label">Vào quét ngay</span><span class="btn-ico">' + SOC.ico('scan', 16) + '</span></button>' +
@@ -387,7 +392,7 @@
     return '<div class="card h-hero--staff">' +
       '<div class="card__head"><h2 class="section-heading">' + SOC.ico('scan', 16) + ' Bạn ở portal station khác</h2></div>' +
       '<div class="h-hero__off">Tài khoản thuộc station <b>' + SOC.esc(SOC.state.station || '—') +
-      '</b> — portal này chỉ mở <b>Điểm danh</b> cho bạn; bạn vẫn quét được task của mọi station.</div>' +
+      '</b> — ở đây chỉ dùng được <b>Điểm danh</b>; quét được mọi task.</div>' +
       '<div class="h-hero__actions"><button type="button" class="btn" data-act="att">' +
       '<span class="btn-label">Đi điểm danh</span><span class="btn-ico">' + SOC.ico('attendance', 16) + '</span></button></div></div>';
   }

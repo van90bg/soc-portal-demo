@@ -26,6 +26,8 @@
   color: var(--header-text); text-shadow: var(--text-shadow-title);
 }
 .h-band__date { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--side-text); }
+.h-band__hello { font-size: var(--text-md); color: var(--muted); }
+.h-band__hello b { color: var(--text); font-weight: var(--weight-semibold); }
 .h-band__facts { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; padding-bottom: var(--space-1); }
 .h-band__facts .pill { background: var(--header-user-bg); border: 1px solid var(--header-border); color: var(--header-text); }
 
@@ -57,7 +59,8 @@
 .h-cell .meter { margin-top: 2px; }
 
 /* Role HUD — Hero nhân viên (viewer) · Workbench (operator) · dải tỷ lệ (manager/admin) */
-.h-hero--staff { display: flex; flex-direction: column; gap: var(--space-3); }
+.h-hero--staff { display: flex; flex-direction: column; gap: var(--space-3); padding-bottom: var(--space-4); }
+.h-hero--staff > :not(.card__head) { margin-inline: var(--space-4); }
 .h-hero__meta { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-6); }
 .h-hero__kv { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .h-hero__kv small { font-size: var(--text-xs); color: var(--muted); }
@@ -69,7 +72,7 @@
 .h-hero__stats { margin-top: var(--space-3); }
 
 .h-workbench { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-4); }
-.h-task-card { display: flex; flex-direction: column; gap: var(--space-2); }
+.h-task-card { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4); }
 .h-task-card__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .h-task-card__meta { font-size: var(--text-sm); color: var(--muted); display: flex; align-items: center; gap: var(--space-1); flex-wrap: wrap; }
 .h-task-card__meter { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-sm); color: var(--muted); }

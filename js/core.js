@@ -53,7 +53,7 @@ var SOC = (function () {
   }
 
   var views = {};
-  var state = { page: 'home', role: 'operator', email: '', opsId: '', name: '', isEditor: false, canViewSchedule: false, loading: false, sound: true, station: '', scope: 'trong-tram', deny: [], pages: null };
+  var state = { page: 'home', role: 'operator', email: '', opsId: '', name: '', isEditor: false, canViewSchedule: false, loading: false, sound: true, station: '', scope: 'trong-tram', deny: [], pages: null, personaKey: 'admin' };
 
   /* ---------- helper escape/format ---------- */
   function esc(v) {
@@ -419,10 +419,15 @@ var SOC = (function () {
     var list = api.personas;
     if (!list) { host.hidden = true; host.innerHTML = ''; return; }
     host.hidden = false;
-    host.innerHTML = '<span class="side-roles__label">Xem với quyền</span>' + list.map(function (p) {
-      var on = p.role === state.role;
-      return '<button type="button" class="chip' + (on ? ' on' : '') + '" data-persona="' + esc(p.key) +
-        '" aria-pressed="' + (on ? 'true' : 'false') + '">' + esc(p.label) + '</button>';
+    var GRPS = [['station', 'Station'], ['khac', 'Khác station'], ['quantri', 'Quản trị']];
+    host.innerHTML = '<span class="side-roles__label">Xem với quyền</span>' + GRPS.map(function (gr) {
+      var items = list.filter(function (p) { return (p.group || 'station') === gr[0]; });
+      if (!items.length) return '';
+      return '<span class="side-roles__group">' + esc(gr[1]) + '</span>' + items.map(function (p) {
+        var on = p.key === state.personaKey;
+        return '<button type="button" class="chip' + (on ? ' on' : '') + '" data-persona="' + esc(p.key) +
+          '" aria-pressed="' + (on ? 'true' : 'false') + '">' + esc(p.label) + '</button>';
+      }).join('');
     }).join('');
     host.querySelectorAll('[data-persona]').forEach(function (b) {
       b.addEventListener('click', function () { setPersona(b.getAttribute('data-persona')); });
@@ -435,7 +440,7 @@ var SOC = (function () {
       state.role = r.role; state.isEditor = !!r.isEditor;
       state.email = r.email || state.email; state.opsId = r.opsId || ''; state.name = r.name || '';
       state.station = r.station || ''; state.scope = r.scope || 'trong-tram';
-      state.pages = r.pages || null; state.deny = r.deny || [];
+      state.pages = r.pages || null; state.deny = r.deny || []; state.personaKey = r.key || '';
       var rl = document.getElementById('sideRole');
       if (rl) rl.textContent = (r.isEditor ? 'editor · ' : '') + r.role;
       ['userEmailM2', 'userEmail'].forEach(function (id) {
@@ -586,7 +591,7 @@ var SOC = (function () {
         meta = r; state.role = r.role || 'operator'; state.email = r.userEmail || '';
         state.opsId = r.opsId || ''; state.name = r.name || '';
         state.station = r.station || ''; state.scope = r.scope || 'trong-tram';
-        state.pages = r.pages || null; state.deny = r.deny || [];
+        state.pages = r.pages || null; state.deny = r.deny || []; state.personaKey = r.key || 'admin';
         state.isEditor = !!r.isEditor; state.canViewSchedule = r.canViewSchedule !== false;
       }
       var mail = meta.userEmail || 'Khách (chưa đăng nhập)';

@@ -139,6 +139,11 @@ main#main-content > section[id^="view"] {
   font-size: var(--text-3xs); font-weight: var(--weight-bold);
   letter-spacing: .12em; text-transform: uppercase; color: var(--side-text-muted);
 }
+.side-roles__group {
+  flex: 1 1 100%; margin-top: var(--space-1);
+  font-size: var(--text-3xs); font-weight: var(--weight-semibold);
+  color: var(--side-text-muted); letter-spacing: .04em;
+}
 .side-roles .chip {
   min-height: 26px; padding: 0 var(--space-2);
   background: var(--header-user-bg); border-color: var(--header-border); color: var(--side-text);

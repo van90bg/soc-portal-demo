@@ -6,17 +6,21 @@
   /* Persona preview — plan 2026-09-27 rank×station: station khác defaultStation bị cap Operator,
      chỉ Điểm danh (quẹt task mọi station); PIC = manager trừ duyệt đơn (deny leaveDecide) */
   var PERSONAS = [
-    { key: 'staff', label: 'Staff', role: 'operator', email: 'viewer.staff@spx-demo.vn', opsId: 'OPS4677', name: 'Nguyễn Mai Anh', station: 'HN2 SOC', isEditor: false },
-    { key: 'pic', label: 'PIC đứng ca', role: 'manager', email: 'pic.hn2@spx-demo.vn', opsId: 'OPS7304', name: 'Vũ Kiên Cường', station: 'HN2 SOC', isEditor: false, deny: ['leaveDecide'] },
-    { key: 'lead', label: 'Lead team', role: 'manager', email: 'manager.admin@spx-demo.vn', opsId: 'OPS6219', name: 'Lê Thành Nam', station: 'HN2 SOC', isEditor: false },
-    { key: 'sup', label: 'Supervisor trạm', role: 'admin', email: 'supervisor.hn2@spx-demo.vn', opsId: 'OPS7301', name: 'Hồ Đức Minh', station: 'HN2 SOC', isEditor: true },
-    { key: 'ngoai', label: 'Khác station', role: 'admin', email: 'sup.hnsoc@spx-demo.vn', opsId: 'OPS7303', name: 'Trịnh Thu Hà', station: 'HN SOC', isEditor: false },
-    { key: 'admin', label: 'Quản trị hệ thống', role: 'admin', email: 'admin.sys@spx-demo.vn', opsId: 'OPS6219', name: 'Lê Thành Nam', station: '', isEditor: true }
+    { key: 'staff', group: 'station', label: 'Staff', role: 'operator', email: 'viewer.staff@spx-demo.vn', opsId: 'OPS4677', name: 'Nguyễn Mai Anh', station: 'HN2 SOC', isEditor: false },
+    { key: 'pic', group: 'station', label: 'PIC', role: 'manager', email: 'pic.hn2@spx-demo.vn', opsId: 'OPS7304', name: 'Vũ Kiên Cường', station: 'HN2 SOC', isEditor: false, deny: ['leaveDecide'] },
+    { key: 'lead', group: 'station', label: 'Lead', role: 'manager', email: 'manager.admin@spx-demo.vn', opsId: 'OPS6219', name: 'Lê Thành Nam', station: 'HN2 SOC', isEditor: false },
+    { key: 'sup', group: 'station', label: 'Supervisor', role: 'admin', email: 'supervisor.hn2@spx-demo.vn', opsId: 'OPS7301', name: 'Hồ Đức Minh', station: 'HN2 SOC', isEditor: true },
+    { key: 'khac-staff', group: 'khac', label: 'Staff', role: 'operator', email: 'nv.hnsoc@spx-demo.vn', opsId: 'OPS7305', name: 'Ngô Đình Bảo', station: 'HN SOC', isEditor: false },
+    { key: 'khac-pic', group: 'khac', label: 'PIC', role: 'manager', email: 'pic.hnsoc@spx-demo.vn', opsId: 'OPS7306', name: 'Đặng Thị Mai Liên', station: 'HN SOC', isEditor: false, deny: ['leaveDecide'] },
+    { key: 'khac-lead', group: 'khac', label: 'Lead', role: 'manager', email: 'lead.hnsoc@spx-demo.vn', opsId: 'OPS7307', name: 'Lý Minh Tuấn', station: 'HN SOC', isEditor: false },
+    { key: 'khac-sup', group: 'khac', label: 'Supervisor', role: 'admin', email: 'sup.hnsoc@spx-demo.vn', opsId: 'OPS7303', name: 'Trịnh Thu Hà', station: 'HN SOC', isEditor: false },
+    { key: 'admin', group: 'quantri', label: 'Quản trị hệ thống', role: 'admin', email: 'admin.sys@spx-demo.vn', opsId: 'OPS6219', name: 'Lê Thành Nam', station: '', isEditor: true }
   ];
-  var SESSION = { email: 'admin.sys@spx-demo.vn', role: 'admin', isEditor: true, opsId: 'OPS6219', name: 'Lê Thành Nam',
+  var SESSION = { key: 'admin', email: 'admin.sys@spx-demo.vn', role: 'admin', isEditor: true, opsId: 'OPS6219', name: 'Lê Thành Nam',
     station: '', scope: 'trong-tram', deny: [], pages: null };
 
   function resolvePersona(p) {
+    SESSION.key = p.key;
     SESSION.role = p.role; SESSION.isEditor = !!p.isEditor;
     SESSION.email = p.email; SESSION.opsId = p.opsId; SESSION.name = p.name;
     SESSION.station = p.station || ''; SESSION.deny = p.deny || [];
@@ -30,7 +34,7 @@
     }
   }
   function sessionPayload() {
-    return { role: SESSION.role, isEditor: SESSION.isEditor, email: SESSION.email, opsId: SESSION.opsId,
+    return { key: SESSION.key, role: SESSION.role, isEditor: SESSION.isEditor, email: SESSION.email, opsId: SESSION.opsId,
       name: SESSION.name, station: SESSION.station, scope: SESSION.scope, pages: SESSION.pages, deny: SESSION.deny };
   }
   function offStation() {
