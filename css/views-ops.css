@@ -26,8 +26,8 @@
   color: var(--header-text); text-shadow: var(--text-shadow-title);
 }
 .h-band__date { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--side-text); }
-.h-band__hello { font-size: var(--text-md); color: var(--muted); }
-.h-band__hello b { color: var(--text); font-weight: var(--weight-semibold); }
+.h-band__hello { font-size: var(--text-md); color: var(--side-text-muted); }
+.h-band__hello b { color: var(--side-text); font-weight: var(--weight-semibold); }
 .h-band__facts { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; padding-bottom: var(--space-1); }
 .h-band__facts .pill { background: var(--header-user-bg); border: 1px solid var(--header-border); color: var(--header-text); }
 
@@ -59,7 +59,7 @@
 .h-cell .meter { margin-top: 2px; }
 
 /* Role HUD — Hero nhân viên (viewer) · Workbench (operator) · dải tỷ lệ (manager/admin) */
-.h-hero--staff { display: flex; flex-direction: column; gap: var(--space-3); padding-bottom: var(--space-4); }
+.h-hero--staff { display: flex; flex-direction: column; gap: var(--space-3); padding-bottom: var(--space-4); flex: 0 0 auto; }
 .h-hero--staff > :not(.card__head) { margin-inline: var(--space-4); }
 .h-hero__meta { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-6); }
 .h-hero__kv { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
@@ -82,6 +82,14 @@
 .h-meter__seg--pending { background: var(--warning); }
 .h-meter__seg--extra { background: var(--accent); }
 .h-task-card__act { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.h-people { flex: 0 0 auto; }
+.h-people__body { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4); }
+.h-people__row { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.h-people__row .num { min-width: var(--space-7); }
+.h-people__meter { flex: 1; min-width: var(--space-8); }
+.h-people__foot { padding: 0 var(--space-4) var(--space-4); font-size: var(--text-sm); color: var(--muted); }
+.h-people__foot b { color: var(--text); }
 
 .h-rate { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-1) var(--space-1); }
 .h-rate__label { font-size: var(--text-xs); color: var(--muted); white-space: nowrap; }

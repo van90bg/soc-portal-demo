@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  var HM = { tasks: null, leave: null, sched: null, self: null, gen: null, loading: false };
+  var HM = { tasks: null, leave: null, sched: null, self: null, att: null, gen: null, loading: false };
   var TTL_MS = 30000;
   var tsCache = 0;
 
@@ -126,6 +126,11 @@
         HM.leave = r;
       }));
     } else { HM.leave = null; }
+    if (SOC.atLeast('manager')) {
+      jobs.push(SOC.api.getAttendanceSummaryApi().then(function (r) {
+        HM.att = (r && r.ok) ? r : null;
+      }));
+    } else { HM.att = null; }
     if (SOC.state.canViewSchedule !== false) {
       jobs.push(SOC.api.getScheduleMonthApi(SOC.isoMonth(new Date())).then(function (r) {
         if (!r || !r.ok) { if (!silent && r) hmOnError(r); HM.sched = null; return; }
@@ -397,6 +402,27 @@
       '<span class="btn-label">Đi điểm danh</span><span class="btn-ico">' + SOC.ico('attendance', 16) + '</span></button></div></div>';
   }
 
+  function hmPeopleCard(a) {
+    if (!a || !(a.rows || []).length) return '';
+    var rows = a.rows.map(function (r) {
+      var pct = r.scheduled ? Math.round(r.scanned / r.scheduled * 100) : 0;
+      return '<div class="h-people__row">' +
+        '<span class="h-people__code">' + SOC.slotCell(r.code) + '</span>' +
+        '<span class="h-people__range num">' + SOC.esc(r.range || '—') + '</span>' +
+        '<span class="num">' + r.scanned + '/' + r.scheduled + '</span>' +
+        '<span class="meter h-people__meter"><span class="meter__fill" style="width:' + pct + '%"></span></span></div>';
+    }).join('');
+    var lv = (a.onLeave || []);
+    var lvTxt = lv.slice(0, 6).map(function (p) { return SOC.esc(p.name) + ' (' + p.type + ')'; }).join(', ');
+    if (lv.length > 6) lvTxt += ' +' + (lv.length - 6) + ' nữa';
+    return '<div class="card h-people">' +
+      '<div class="card__head"><h2 class="section-heading">' + SOC.ico('personal', 16) +
+      ' Hôm nay — nhân sự</h2><span class="filter-count">' + SOC.esc(SOC.fmtDate(a.day)) + ' · ' + a.onShift + ' người có ca</span></div>' +
+      '<div class="h-people__body">' + rows + '</div>' +
+      '<div class="h-people__foot">Nghỉ phép/ốm: ' + (lvTxt || 'không') +
+      ' · Nghỉ tuần: ' + a.off + ' · Đơn chờ duyệt: <b>' + a.leavePending + '</b></div></div>';
+  }
+
   function hmPaint() {
     var sec = document.getElementById('viewHome');
     if (!sec) return;
@@ -412,7 +438,7 @@
     } else if (!SOC.atLeast('manager')) {
       sec.innerHTML = hmBand(s) + hmStaffHero() + hmStaffStats();
     } else {
-      sec.innerHTML = hmBand(s) + hmRate(s) + hmStrip(s) +
+      sec.innerHTML = hmBand(s) + hmRate(s) + hmPeopleCard(HM.att) + hmStrip(s) +
         '<div class="split split--rev h-main">' + hmTriageCard(hmTriage(s)) + hmRunCard(s.running) + '</div>';
     }
 

@@ -199,6 +199,51 @@
         })
       });
     },
+    /* Tổng hợp nhân sự hôm nay cho hub Lead/PIC/Supervisor: chấm theo ca, nghỉ, đơn chờ —
+     nguồn schedule + logs thật, ngày mặc định MOCK.DAY */
+    getAttendanceSummaryApi: function (day) {
+      if (!gate('manager')) return delay(fail('Không đủ quyền', { rows: [] }));
+      var off = offStation(); if (off) return delay(off);
+      var d = String(day || MOCK.DAY).slice(0, 10);
+      var rangeOf = {};
+      (MOCK.slots || []).forEach(function (x) { rangeOf[x.code] = x.from + '–' + x.to; });
+      var byCode = {};
+      var offN = 0, onShift = 0;
+      Object.keys(S.schedule).forEach(function (id) {
+        if (id === '__seeded__') return;
+        var s = S.staff.filter(function (x) { return x.opsId === id && x.valid; })[0];
+        if (!s) return;
+        var code = String((S.schedule[id] || {})[d] || '');
+        if (!code) return;
+        if (code === 'OFF') { offN++; return; }
+        if (/^S\d+$/.test(code)) {
+          (byCode[code] || (byCode[code] = [])).push(s);
+          onShift++;
+        } else {
+          (byCode[code] || (byCode[code] = [])).push(s);
+        }
+      });
+      var scannedIds = {};
+      S.tasks.forEach(function (t) {
+        if (String(t.date || '').slice(0, 10) !== d) return;
+        (S.logs[t.taskId] || []).forEach(function (r) {
+          if (r.status === 'Đã điểm danh') scannedIds[r.staffId] = 1;
+        });
+      });
+      var rows = [], leave = [];
+      Object.keys(byCode).forEach(function (code) {
+        var ppl = byCode[code];
+        if (/^S\d+$/.test(code)) {
+          var sc = ppl.filter(function (s) { return scannedIds[s.opsId]; }).length;
+          rows.push({ code: code, range: rangeOf[code] || '', scheduled: ppl.length, scanned: sc });
+        } else {
+          ppl.forEach(function (s) { leave.push({ name: s.name, opsId: s.opsId, type: code }); });
+        }
+      });
+      rows.sort(function (a, b) { return (Number(a.code.slice(1)) - Number(b.code.slice(1))) || a.code.localeCompare(b.code); });
+      var pending = S.leave.filter(function (l) { return l.status === 'pending'; }).length;
+      return delay({ ok: true, day: d, rows: rows, onLeave: leave, off: offN, onShift: onShift, leavePending: pending });
+    },
     getStaffStatsApi: function () {
       if (!gate('manager')) return delay(fail('Không đủ quyền'));
       var off = offStation(); if (off) return delay(off);
