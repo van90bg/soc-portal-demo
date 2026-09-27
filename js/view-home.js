@@ -11,7 +11,7 @@
   /* Danh sách đổi gen sau mỗi mutation ở view khác — cache coi như hết hạn. */
   function hmFresh() {
     return !!HM.tasks && SOC.dataGen() === HM.gen && (Date.now() - tsCache) < TTL_MS &&
-      (SOC.state.role !== 'viewer' || !!HM.self);
+      (SOC.state.scope === 'ngoai-tram' || SOC.atLeast('manager') || !!HM.self);
   }
 
   function hmToday() { return SOC.isoDay(new Date()); }
@@ -132,7 +132,7 @@
         HM.sched = r;
       }));
     } else { HM.sched = null; }
-    if (SOC.state.role === 'viewer') {
+    if (SOC.state.scope !== 'ngoai-tram' && !SOC.atLeast('manager')) {
       jobs.push(SOC.api.staffInfoSelfApi().then(function (r) {
         if (!r || !r.ok) { if (!silent && r) hmOnError(r); HM.self = null; return; }
         HM.self = r;
@@ -383,21 +383,29 @@
       }).join('') + '</div>';
   }
 
+  function hmGuestHero() {
+    return '<div class="card h-hero--staff">' +
+      '<div class="card__head"><h2 class="section-heading">' + SOC.ico('scan', 16) + ' Bạn ở portal station khác</h2></div>' +
+      '<div class="h-hero__off">Tài khoản thuộc station <b>' + SOC.esc(SOC.state.station || '—') +
+      '</b> — portal này chỉ mở <b>Điểm danh</b> cho bạn; bạn vẫn quét được task của mọi station.</div>' +
+      '<div class="h-hero__actions"><button type="button" class="btn" data-act="att">' +
+      '<span class="btn-label">Đi điểm danh</span><span class="btn-ico">' + SOC.ico('attendance', 16) + '</span></button></div></div>';
+  }
+
   function hmPaint() {
     var sec = document.getElementById('viewHome');
     if (!sec) return;
     var s = hmStats();
-    var role = SOC.state.role;
 
     SOC.pageActions('<button type="button" class="btn btn-outline" data-act="att">' +
       '<span class="btn-label">Điểm danh</span><span class="btn-ico">' + SOC.ico('attendance', 16) + '</span></button>' +
       '<button type="button" class="btn btn-outline" data-act="reload">' +
       '<span class="btn-label">Cập nhật</span><span class="btn-ico">' + SOC.ico('refresh', 16) + '</span></button>');
 
-    if (role === 'viewer') {
+    if (SOC.state.scope === 'ngoai-tram') {
+      sec.innerHTML = hmBand(s) + hmGuestHero() + hmWorkbench(s);
+    } else if (!SOC.atLeast('manager')) {
       sec.innerHTML = hmBand(s) + hmStaffHero() + hmStaffStats();
-    } else if (role === 'operator') {
-      sec.innerHTML = hmBand(s) + hmWorkbench(s) + hmTriageCard(hmTriage(s));
     } else {
       sec.innerHTML = hmBand(s) + hmRate(s) + hmStrip(s) +
         '<div class="split split--rev h-main">' + hmTriageCard(hmTriage(s)) + hmRunCard(s.running) + '</div>';

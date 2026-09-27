@@ -3,14 +3,39 @@
 (function () {
   'use strict';
   var RANK = { viewer: 1, operator: 2, manager: 3, admin: 4 };
-  /* Persona preview — danh tính synthetic KHỚP hồ sơ cấy trong mock-data (khóa OPS4677/7562/6219) */
+  /* Persona preview — plan 2026-09-27 rank×station: station khác defaultStation bị cap Operator,
+     chỉ Điểm danh (quẹt task mọi station); PIC = manager trừ duyệt đơn (deny leaveDecide) */
   var PERSONAS = [
-    { key: 'viewer', label: 'Viewer', role: 'viewer', email: 'viewer.staff@spx-demo.vn', opsId: 'OPS4677', name: 'Nguyễn Mai Anh', isEditor: false },
-    { key: 'operator', label: 'Operator', role: 'operator', email: 'operator.lead@spx-demo.vn', opsId: 'OPS7562', name: 'Trần Quốc Dũng', isEditor: false },
-    { key: 'manager', label: 'Manager', role: 'manager', email: 'manager.admin@spx-demo.vn', opsId: 'OPS6219', name: 'Lê Thành Nam', isEditor: false },
-    { key: 'admin', label: 'Admin', role: 'admin', email: 'admin.sys@spx-demo.vn', opsId: 'OPS6219', name: 'Lê Thành Nam', isEditor: true }
+    { key: 'staff', label: 'Staff', role: 'operator', email: 'viewer.staff@spx-demo.vn', opsId: 'OPS4677', name: 'Nguyễn Mai Anh', station: 'HN2 SOC', isEditor: false },
+    { key: 'pic', label: 'PIC đứng ca', role: 'manager', email: 'pic.hn2@spx-demo.vn', opsId: 'OPS7304', name: 'Vũ Kiên Cường', station: 'HN2 SOC', isEditor: false, deny: ['leaveDecide'] },
+    { key: 'lead', label: 'Lead team', role: 'manager', email: 'manager.admin@spx-demo.vn', opsId: 'OPS6219', name: 'Lê Thành Nam', station: 'HN2 SOC', isEditor: false },
+    { key: 'sup', label: 'Supervisor trạm', role: 'admin', email: 'supervisor.hn2@spx-demo.vn', opsId: 'OPS7301', name: 'Hồ Đức Minh', station: 'HN2 SOC', isEditor: true },
+    { key: 'ngoai', label: 'Khác station', role: 'admin', email: 'sup.hnsoc@spx-demo.vn', opsId: 'OPS7303', name: 'Trịnh Thu Hà', station: 'HN SOC', isEditor: false },
+    { key: 'admin', label: 'Quản trị hệ thống', role: 'admin', email: 'admin.sys@spx-demo.vn', opsId: 'OPS6219', name: 'Lê Thành Nam', station: '', isEditor: true }
   ];
-  var SESSION = { email: 'admin.sys@spx-demo.vn', role: 'admin', isEditor: true, opsId: 'OPS6219', name: 'Lê Thành Nam' };
+  var SESSION = { email: 'admin.sys@spx-demo.vn', role: 'admin', isEditor: true, opsId: 'OPS6219', name: 'Lê Thành Nam',
+    station: '', scope: 'trong-tram', deny: [], pages: null };
+
+  function resolvePersona(p) {
+    SESSION.role = p.role; SESSION.isEditor = !!p.isEditor;
+    SESSION.email = p.email; SESSION.opsId = p.opsId; SESSION.name = p.name;
+    SESSION.station = p.station || ''; SESSION.deny = p.deny || [];
+    SESSION.scope = 'trong-tram'; SESSION.pages = null;
+    var portal = String(S.settings.defaultStation || '');
+    if (p.station && portal && p.station !== portal && p.key !== 'admin') {
+      if ((RANK[SESSION.role] || 0) > RANK.operator) SESSION.role = 'operator';
+      SESSION.isEditor = false;
+      SESSION.scope = 'ngoai-tram';
+      SESSION.pages = ['home', 'attendance', 'scan', 'about'];
+    }
+  }
+  function sessionPayload() {
+    return { role: SESSION.role, isEditor: SESSION.isEditor, email: SESSION.email, opsId: SESSION.opsId,
+      name: SESSION.name, station: SESSION.station, scope: SESSION.scope, pages: SESSION.pages, deny: SESSION.deny };
+  }
+  function offStation() {
+    return SESSION.scope === 'ngoai-tram' ? fail('Bạn ở station khác — portal này chỉ mở Điểm danh') : null;
+  }
 
   var S = {
     staff: MOCK.staff.slice(),
@@ -88,18 +113,18 @@
     /* đổi vai trò xem thử — bản mock giữ tham chiếu SESSION tại chỗ nên SOC.api.session vẫn đúng */
     setPersona: function (key) {
       var p = PERSONAS.filter(function (x) { return x.key === key; })[0] || PERSONAS[PERSONAS.length - 1];
-      SESSION.role = p.role; SESSION.isEditor = p.isEditor;
-      SESSION.email = p.email; SESSION.opsId = p.opsId; SESSION.name = p.name;
-      return delay({ ok: true, role: SESSION.role, isEditor: SESSION.isEditor, email: SESSION.email, opsId: SESSION.opsId, name: SESSION.name });
+      resolvePersona(p);
+      return delay(Object.assign({ ok: true }, sessionPayload()));
     },
 
     /* ---- Code.gs ---- */
     getMetaApi: function () {
-      return delay({ ok: true, appTitle: 'SOC Portal', userEmail: SESSION.email, role: SESSION.role, isEditor: SESSION.isEditor, canViewSchedule: true, opsId: SESSION.opsId, name: SESSION.name });
+      return delay(Object.assign({ ok: true, appTitle: 'SOC Portal', userEmail: SESSION.email, canViewSchedule: true }, sessionPayload()));
     },
     /* hồ sơ của chính người đang đăng nhập — viewer chỉ đọc dữ liệu mình */
     staffInfoSelfApi: function () {
       if (!gate('viewer')) return delay(fail('Không đủ quyền', { staff: null }));
+      var off = offStation(); if (off) return delay(off);
       var s = S.staff.filter(function (x) { return x.opsId === SESSION.opsId; })[0]
         || S.staff.filter(function (x) { return x.email === SESSION.email; })[0];
       if (!s) return delay(fail('Không tìm thấy hồ sơ của bạn', { staff: null }));
@@ -157,6 +182,7 @@
     },
     getStaffStatsApi: function () {
       if (!gate('manager')) return delay(fail('Không đủ quyền'));
+      var off = offStation(); if (off) return delay(off);
       return delay({ ok: true, staff: MOCK.staffData });
     },
     getSettingsApi: function () {
@@ -437,6 +463,7 @@
 
     /* ---- lịch ---- */
     getScheduleMonthApi: function (month, year) {
+      var off = offStation(); if (off) return delay(off);
       var m = normalizeMonth(month, year);
       ensureScheduleMonth(m);
       if (!gate('viewer')) return delay(fail('Không đủ quyền'));
@@ -446,6 +473,7 @@
       });
     },
     getScheduleMonthWithPositionApi: function (month, year) {
+      var off = offStation(); if (off) return delay(off);
       var m = normalizeMonth(month, year);
       return delay({
         ok: true, month: m, employees: MOCK.employees, schedule: S.schedule, daysInMonth: monthDays(m),
@@ -455,6 +483,7 @@
     },
     getScheduleReportsApi: function (month) {
       if (!gate('operator')) return delay(fail('Không đủ quyền', { rows: [] }));
+      var off = offStation(); if (off) return delay(off);
       var rows = S.reports.filter(function (r) { return !month || r.reportDate.slice(0, 7) === month; });
       return delay({ ok: true, rows: rows, month: month, email: SESSION.email, staffName: S.staff[0].name, isAdmin: SESSION.role === 'admin', message: '' });
     },
@@ -469,7 +498,8 @@
       return delay({ ok: true, updatedMonths: Object.keys(months).sort(), message: 'Đã lưu ' + (updates || []).length + ' ô' });
     },
     getInformationApi: function () {
-      if (!gate('viewer')) return delay(fail('Không đủ quyền', { rows: [] }));
+      if (!gate('admin')) return delay(fail('Chỉ Supervisor/Admin xem được Nhân sự', { rows: [] }));
+      var off = offStation(); if (off) return delay(off);
       var rows = S.staff.map(function (s) {
         return {
           row: s.row, no: s.no, staffId: s.staffId, opsId: s.opsId, name: s.name, email: s.email,
@@ -511,10 +541,12 @@
 
     /* ---- vị trí ---- */
     getWorkPositionMonthApi: function (month, year) {
+      var off = offStation(); if (off) return delay(off);
       var m = normalizeMonth(month, year);
       return delay({ ok: true, month: m, positions: S.positions, message: '' });
     },
     getWorkPositionByDateApi: function (dateString) {
+      var off = offStation(); if (off) return delay(off);
       return delay({ ok: true, dateString: dateString, positions: S.positions[dateString] || {}, message: '' });
     },
     saveWorkPositionBatchApi: function (dateStr, changes) {
@@ -532,6 +564,7 @@
     /* ---- xin nghỉ ---- */
     requestLeaveApi: function (input) {
       if (!gate('operator')) return delay(fail('Không đủ quyền', { id: '' }));
+      var off = offStation(); if (off) return delay(off);
       var pending = S.leave.filter(function (r) { return r.status === 'pending'; }).length;
       if (pending >= 5) return delay(fail('Đã có 5 đơn chờ duyệt', { id: '' }));
       var s = S.staff.filter(function (x) { return x.email === SESSION.email; })[0] || S.staff[0];
@@ -546,6 +579,7 @@
     },
     getLeaveRequestsApi: function (opts) {
       if (!gate('operator')) return delay(fail('Không đủ quyền', { rows: [], pendingCount: 0 }));
+      var off = offStation(); if (off) return delay(off);
       var o = opts || {};
       var rows = S.leave.filter(function (r) {
         if (o.month && r.dateString.slice(0, 7) !== o.month) return false;
@@ -556,7 +590,9 @@
       return delay({ ok: true, rows: rows, pendingCount: rows.filter(function (r) { return r.status === 'pending'; }).length, message: '' });
     },
     decideLeaveApi: function (input) {
-      if (!gate('admin')) return delay(fail('Chỉ admin duyệt được', { status: 'pending' }));
+      if (!gate('manager')) return delay(fail('Cần Supervisor/Lead để duyệt đơn', { status: 'pending' }));
+      if (SESSION.deny.indexOf('leaveDecide') >= 0) return delay(fail('PIC không duyệt đơn — cần Supervisor/Lead', { status: 'pending' }));
+      var off = offStation(); if (off) return delay(off);
       var r = S.leave.filter(function (x) { return x.id === input.id; })[0];
       if (!r) return delay(fail('Không tìm thấy đơn', { status: '' }));
       r.status = input.approve === true ? 'approved' : 'denied';
@@ -567,6 +603,7 @@
     },
     cancelLeaveApi: function (input) {
       if (!gate('operator')) return delay(fail('Không đủ quyền'));
+      var off = offStation(); if (off) return delay(off);
       var r = S.leave.filter(function (x) { return x.id === input.id; })[0];
       if (!r || r.status !== 'pending') return delay(fail('Chỉ hủy được đơn đang chờ'));
       r.status = 'cancelled'; r.note = input.note || '';

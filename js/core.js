@@ -37,7 +37,7 @@ var SOC = (function () {
     about:               { group: 'Hệ thống',  label: 'Giới thiệu',     section: 'viewAbout',               eyebrow: 'SYSTEM / HELP',     title: 'Giới thiệu SPX SOC Portal', desc: 'Hướng dẫn điểm danh · ký hiệu ca · ghi chú sử dụng' }
   };
 
-  var SIDE_ROLES = { stats: 'manager', data: 'manager', admin: 'admin', config: 'editor', information: 'viewer', leave: 'operator' };
+  var SIDE_ROLES = { stats: 'manager', data: 'manager', admin: 'admin', config: 'editor', information: 'admin', leave: 'operator' };
 
   var SCAN_TASK = null;
   var SCAN_ROSTER = false;
@@ -53,7 +53,7 @@ var SOC = (function () {
   }
 
   var views = {};
-  var state = { page: 'home', role: 'operator', email: '', opsId: '', name: '', isEditor: false, canViewSchedule: false, loading: false, sound: true };
+  var state = { page: 'home', role: 'operator', email: '', opsId: '', name: '', isEditor: false, canViewSchedule: false, loading: false, sound: true, station: '', scope: 'trong-tram', deny: [], pages: null };
 
   /* ---------- helper escape/format ---------- */
   function esc(v) {
@@ -320,6 +320,9 @@ var SOC = (function () {
     return (ROLE_RANK[state.role] || 0) >= (ROLE_RANK[min] || 99);
   }
   function visiblePages() {
+    if (state.pages && state.pages.length) {
+      return Object.keys(PAGE_META).filter(function (p) { return state.pages.indexOf(p) >= 0; });
+    }
     return Object.keys(PAGE_META).filter(function (p) {
       var gate = SIDE_ROLES[p];
       if (gate === undefined) return true;
@@ -430,6 +433,8 @@ var SOC = (function () {
       if (!r || !r.ok) return;
       state.role = r.role; state.isEditor = !!r.isEditor;
       state.email = r.email || state.email; state.opsId = r.opsId || ''; state.name = r.name || '';
+      state.station = r.station || ''; state.scope = r.scope || 'trong-tram';
+      state.pages = r.pages || null; state.deny = r.deny || [];
       var rl = document.getElementById('sideRole');
       if (rl) rl.textContent = (r.isEditor ? 'editor · ' : '') + r.role;
       ['userEmailM2', 'userEmail'].forEach(function (id) {
@@ -570,6 +575,8 @@ var SOC = (function () {
       if (r && r.ok) {
         meta = r; state.role = r.role || 'operator'; state.email = r.userEmail || '';
         state.opsId = r.opsId || ''; state.name = r.name || '';
+        state.station = r.station || ''; state.scope = r.scope || 'trong-tram';
+        state.pages = r.pages || null; state.deny = r.deny || [];
         state.isEditor = !!r.isEditor; state.canViewSchedule = r.canViewSchedule !== false;
       }
       var mail = meta.userEmail || 'Khách (chưa đăng nhập)';
